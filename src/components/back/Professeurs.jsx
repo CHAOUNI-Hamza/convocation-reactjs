@@ -5,17 +5,9 @@ import * as XLSX from 'xlsx';
 import '../../css/users.css';
 
 function Professeurs() {
-  const [professeurs, setProfesseurs] = useState([]);
-  //const [users, setUsers] = useState([]);
+  const [datas, setDatas] = useState([]);
   const [error, setError] = useState(null);
-  //const [selectedAnnee, setSelectedAnnee] = useState('');
-  //const [selectedLaboratoire, setSelectedLaboratoire] = useState('');
-  //const [selectedEquipe, setSelectedEquipe] = useState('');
-  //const [laboratoires, setLaboratoire] = useState([]);
-
-  //const [equipes, setEquipe] = useState([]);
-
-  const [newProfesseurData, setNewProfesseurData] = useState({
+  const [newData, setNewData] = useState({
     sum_number: '',
     name: '',
     first_name: '',
@@ -23,83 +15,32 @@ function Professeurs() {
     first_name_ar: '',
     email: '',
   });
-  const [editProfesseurData, setEditProfesseurData] = useState(null);
+  const [editData, setEditData] = useState(null);
 
   const fetchData = async () => {
     setError(null);
     try {
-      /*const response = await axios.get('/articles', {
-        params: { 
-          annee: selectedAnnee, 
-          laboratoire_id: selectedLaboratoire,
-          equipe_id: selectedEquipe,  
-        }
-      });*/
       const response = await axios.get('/teachers');
-      setProfesseurs(response.data.data);
-      console.log("test");
-      console.log(response.data.data);
-      console.log("test");
+      setDatas(response.data.data);
     } catch (error) {
       console.error('Error fetching data:', error);
     }
   };
-
-  /*useEffect(() => {
-    const fetchInitialData = async () => {
-      try {
-        const [usersResponse, laboResponse, equipeResponse] = await Promise.all([
-          axios.get('/users'),
-          axios.get('/laboratoires'),
-        ]);
-        setUsers(usersResponse.data.data);
-        setLaboratoire(laboResponse.data.data);
-      } catch (error) {
-        console.error('There was an error fetching data!', error);
-      }
-    };
-
-    fetchInitialData();
-    fetchData();
-  }, []);*/
   useEffect(() => {
     fetchData();
   });
-  
-  /*useEffect(() => {
-    fetchData();
-  }, [selectedAnnee, selectedLaboratoire, selectedEquipe]);*/
-
-  /*const fetchEquipesByLaboratoire = async (laboratoireId) => {
-    try {
-      const response = await axios.get(`/laboratoire/${laboratoireId}/equipes`);
-      setEquipe(response.data.data);
-    } catch (error) {
-      console.error('Error fetching equipes:', error);
-    }
-  };*/
-
-  /*useEffect(() => {
-    if (selectedLaboratoire) {
-      fetchEquipesByLaboratoire(selectedLaboratoire);
-    } else {
-      setEquipe([]); // Réinitialiser les équipes si aucun laboratoire n'est sélectionné
-    }
-  }, [selectedLaboratoire]);*/
-  
-
-  const handleNewProfesseurDataChange = (e) => {
+  const handleNewDataChange = (e) => {
     const { name, value } = e.target;
-    setNewProfesseurData((newProfesseurData) => ({ ...newProfesseurData, [name]: value }));
+    setNewData((newData) => ({ ...newData, [name]: value }));
   };
 
-  const handleEditProfesseurDataChange = (e) => {
+  const handleEditDataChange = (e) => {
     const { name, value } = e.target;
-    setEditProfesseurData((editProfesseurData) => ({ ...editProfesseurData, [name]: value }));
+    setEditData((editData) => ({ ...editData, [name]: value }));
   };
 
-  const addProfesseur = async () => {
-    const { sum_number, name, first_name, name_ar, first_name_ar, email } = newProfesseurData;
+  const addData = async () => {
+    const { sum_number, name, first_name, name_ar, first_name_ar, email } = newData;
     if (!sum_number || !name || !first_name || !name_ar || !first_name_ar || !email ) {
       Swal.fire({
         icon: 'error',
@@ -118,7 +59,7 @@ function Professeurs() {
         document.getElementById('closeModalBtn').click();
       });
       fetchData();
-      setNewProfesseurData({
+      setNewData({
         titre: '',
         revue: '',
         url: '',
@@ -130,9 +71,9 @@ function Professeurs() {
     }
   };
 
-  const editProfesseur = async () => {
+  const editDatas = async () => {
     try {
-      const { id, sum_number, name, first_name, name_ar, first_name_ar, email } = editProfesseurData;
+      const { id, sum_number, name, first_name, name_ar, first_name_ar, email } = editData;
       await axios.put(`admin/teachers/${id}`, { sum_number, name, first_name, name_ar, first_name_ar, email });
       fetchData();
       Swal.fire({
@@ -147,7 +88,7 @@ function Professeurs() {
     }
   };
 
-  const deleteProfesseur = async (id) => {
+  const deleteData = async (id) => {
     try {
       const result = await Swal.fire({
         title: "هل أنت متأكد؟",
@@ -175,13 +116,10 @@ function Professeurs() {
   };
 
   const openEditModal = (professeur) => {
-    setEditProfesseurData(professeur);
+    setEditData(professeur);
   };
 
   const clearFilters = () => {
-    //setSelectedAnnee('');
-    //setSelectedLaboratoire('');
-    //setSelectedEquipe('');
     fetchData();
   };
 
@@ -215,7 +153,7 @@ function Professeurs() {
 };
 
 const downloadExcel = () => {
-  const wb = convertToExcel(professeurs);
+  const wb = convertToExcel(datas);
   XLSX.writeFile(wb, 'professeurs.xlsx');
 };
 
@@ -256,49 +194,6 @@ Télécharger
     <div className="card-tools" style={{ marginRight: '10rem' }}>
           </div>
           <div className="filter-group">
-            {/*<select className="form-select" style={{ width: '20%' }} value={selectedAnnee} onChange={(e) => setSelectedAnnee(e.target.value)}>
-              <option value="">اختيار السنة</option>
-              {Array.from({ length: new Date().getFullYear() - 1999 }, (_, i) => 2000 + i).reverse().map(year => (
-    <option key={year} value={year}>{year}</option>
-  ))}
-               Add more years as needed 
-            </select>
-            <select
-                className="form-select"
-                style={{ width: '30%' }}
-                value={selectedLaboratoire}
-                onChange={(e) => setSelectedLaboratoire(e.target.value)}
-              >
-                <option value="">اختيار المختبر</option>
-                {laboratoires.map(labo => (
-                  <option key={labo.id} value={labo.id}>{labo.nom}</option>
-                ))}
-              </select>
-              <select
-                className="form-select"
-                style={{ width: '30%' }}
-                value={selectedEquipe}
-                onChange={(e) => setSelectedEquipe(e.target.value)}
-                disabled={!selectedLaboratoire} // Désactiver si aucun laboratoire n'est sélectionné
-              >
-                <option value="">اختيار الفريق</option>
-                {equipes.map(equipe => (
-                  <option key={equipe.id} value={equipe.id}>{equipe.nom}</option>
-                ))}
-              </select>
-            <button
-                type="button"
-                className="btn btn-secondary btn-sm"
-                onClick={clearFilters}
-              >
-                افرغ
-              </button>*/}
-
-
-              
-
-
-
           </div>
           </div>
           <div className="card-body table-responsive p-0">
@@ -315,20 +210,20 @@ Télécharger
                 </tr>
               </thead>
               <tbody>
-                {professeurs.map(professeur => (
-                  <tr key={professeur.id}>
-                    <td>{professeur.sum_number}</td>
-                    <td>{professeur.name}</td>
-                    <td>{professeur.first_name}</td>
-                    <td>{professeur.name_ar}</td>
-                    <td>{professeur.first_name_ar}</td>
-                    <td>{professeur.email}</td>
+                {datas.map(data => (
+                  <tr key={data.id}>
+                    <td>{data.sum_number}</td>
+                    <td>{data.name}</td>
+                    <td>{data.first_name}</td>
+                    <td>{data.name_ar}</td>
+                    <td>{data.first_name_ar}</td>
+                    <td>{data.email}</td>
                     <td>
                       <a
                         href="#"
                         style={{ color: '#ff0000b3', marginRight: '10px' }}
                         aria-label="Delete"
-                        onClick={() => deleteProfesseur(professeur.id)}
+                        onClick={() => deleteData(data.id)}
                       >
                         <i className="fa fa-trash" aria-hidden="true"></i>
                       </a>
@@ -338,7 +233,7 @@ Télécharger
                         data-target="#editModal"
                         style={{ color: '#007bff', marginRight: '10px' }}
                         aria-label="Edit"
-                        onClick={() => openEditModal(professeur)}
+                        onClick={() => openEditModal(data)}
                       >
                         <i className="fa fa-edit" aria-hidden="true"></i>
                       </a>
@@ -367,64 +262,35 @@ Télécharger
               <form>
                 <div className="form-group">
                   <label htmlFor="sum_number">Som</label>
-                  <input type="text" className="form-control" id="sum_number" name="sum_number" value={newProfesseurData.sum_number} onChange={handleNewProfesseurDataChange} required />
+                  <input type="text" className="form-control" id="sum_number" name="sum_number" value={newData.sum_number} onChange={handleNewDataChange} required />
                 </div>
                 <div className="form-group">
                   <label htmlFor="name">Nom</label>
-                  <input type="text" className="form-control" id="name" name="name" value={newProfesseurData.name} onChange={handleNewProfesseurDataChange} required />
+                  <input type="text" className="form-control" id="name" name="name" value={newData.name} onChange={handleNewDataChange} required />
                 </div>
                 <div className="form-group">
                   <label htmlFor="first_name">Prénom</label>
-                  <input type="text" className="form-control" id="first_name" name="first_name" value={newProfesseurData.first_name} onChange={handleNewProfesseurDataChange} required />
+                  <input type="text" className="form-control" id="first_name" name="first_name" value={newData.first_name} onChange={handleNewDataChange} required />
                 </div>
                 <div className="form-group">
                   <label htmlFor="name_ar">Nom Ar</label>
-                  <input type="text" className="form-control" id="name_ar" name="name_ar" value={newProfesseurData.name_ar} onChange={handleNewProfesseurDataChange} required />
+                  <input type="text" className="form-control" id="name_ar" name="name_ar" value={newData.name_ar} onChange={handleNewDataChange} required />
                 </div>
                 <div className="form-group">
                   <label htmlFor="first_name_ar">Prénom Ar</label>
-                  <input type="text" className="form-control" id="first_name_ar" name="first_name_ar" value={newProfesseurData.first_name_ar} onChange={handleNewProfesseurDataChange} required />
+                  <input type="text" className="form-control" id="first_name_ar" name="first_name_ar" value={newData.first_name_ar} onChange={handleNewDataChange} required />
                 </div>
                 <div className="form-group">
                   <label htmlFor="email">Email</label>
-                  <input type="text" className="form-control" id="email" name="email" value={newProfesseurData.email} onChange={handleNewProfesseurDataChange} required />
+                  <input type="text" className="form-control" id="email" name="email" value={newData.email} onChange={handleNewDataChange} required />
                 </div>
-                {/*<div className="form-group text-right">
-                  <label htmlFor="annee">السنة </label>
-                  <select className="form-control" id="annee" name="annee"
-                  onChange={handleNewUserDataChange}
-                  value={newUserData.annee}
-                  >
-                          <option value="" disabled>اختر السنة</option>
-                          {Array.from({ length: new Date().getFullYear() - 1999 }, (_, i) => 2000 + i).reverse().map(year => (
-    <option key={year} value={year}>{year}</option>
-  ))}
-                        </select>
-                </div>*/}
-                {/*<div className='form-group'>
-                  <label htmlFor="user_id">صاحب المقال</label>
-                  <select
-                    className="form-control"
-                    id="user_id"
-                    name='user_id'
-                    value={newUserData.user_id}
-                    onChange={handleNewUserDataChange}
-                    required
-                  >
-                    <option value="" disabled>اختر صاحب المقال</option>
-                    {users.map(user => (
-        <option key={user.id} value={user.id}>{user.nom} {user.prénom}</option>
-      ))}
-                    
-                  </select>
-                </div>*/}
               </form>
             </div>
             <div className="modal-footer">
               <button type="button" style={{borderRadius: '0',
     padding: '3px 16px'}} className="btn btn-secondary" id="closeModalBtn" data-dismiss="modal">Annuler</button>
               <button type="button" style={{borderRadius: '0',
-    padding: '3px 16px'}} className="btn btn-primary" onClick={addProfesseur}>Ajouter</button>
+    padding: '3px 16px'}} className="btn btn-primary" onClick={addData}>Ajouter</button>
             </div>
           </div>
         </div>
@@ -432,7 +298,7 @@ Télécharger
 
       {/* Edit User Modal */}
       {/* Edit User Modal */}
-{editProfesseurData && ( 
+{editData && ( 
   <div className="modal fade" id="editModal" tabIndex="-1" role="dialog" aria-labelledby="editModalLabel" aria-hidden="true">
     <div className="modal-dialog" role="document">
       <div className="modal-content">
@@ -443,27 +309,27 @@ Télécharger
           <form>
           <div className="form-group">
                   <label htmlFor="sum_number">Som</label>
-                  <input type="text" className="form-control" id="sum_number" name="sum_number" value={editProfesseurData.sum_number} onChange={handleEditProfesseurDataChange} required />
+                  <input type="text" className="form-control" id="sum_number" name="sum_number" value={editData.sum_number} onChange={handleEditDataChange} required />
                 </div>
                 <div className="form-group">
                   <label htmlFor="name">Nom</label>
-                  <input type="text" className="form-control" id="name" name="name" value={editProfesseurData.name} onChange={handleEditProfesseurDataChange} required />
+                  <input type="text" className="form-control" id="name" name="name" value={editData.name} onChange={handleEditDataChange} required />
                 </div>
                 <div className="form-group">
                   <label htmlFor="first_name">Prénom</label>
-                  <input type="text" className="form-control" id="first_name" name="first_name" value={editProfesseurData.first_name} onChange={handleEditProfesseurDataChange} required />
+                  <input type="text" className="form-control" id="first_name" name="first_name" value={editData.first_name} onChange={handleEditDataChange} required />
                 </div>
                 <div className="form-group">
                   <label htmlFor="name_ar">Nom Ar</label>
-                  <input type="text" className="form-control" id="name_ar" name="name_ar" value={editProfesseurData.name_ar} onChange={handleEditProfesseurDataChange} required />
+                  <input type="text" className="form-control" id="name_ar" name="name_ar" value={editData.name_ar} onChange={handleEditDataChange} required />
                 </div>
                 <div className="form-group">
                   <label htmlFor="first_name_ar">Prénom Ar</label>
-                  <input type="text" className="form-control" id="first_name_ar" name="first_name_ar" value={editProfesseurData.first_name_ar} onChange={handleEditProfesseurDataChange} required />
+                  <input type="text" className="form-control" id="first_name_ar" name="first_name_ar" value={editData.first_name_ar} onChange={handleEditDataChange} required />
                 </div>
                 <div className="form-group">
                   <label htmlFor="email">Email</label>
-                  <input type="text" className="form-control" id="email" name="email" value={editProfesseurData.email} onChange={handleEditProfesseurDataChange} required />
+                  <input type="text" className="form-control" id="email" name="email" value={editData.email} onChange={handleEditDataChange} required />
                 </div>
           </form>
         </div>
@@ -471,7 +337,7 @@ Télécharger
           <button type="button" className="btn btn-secondary" style={{borderRadius: '0',
     padding: '3px 16px'}} id="closeEditModalBtn" data-dismiss="modal">Annuler</button>
           <button type="button" className="btn btn-primary" style={{borderRadius: '0',
-    padding: '3px 16px'}} onClick={editProfesseur}>Modifier</button>
+    padding: '3px 16px'}} onClick={editDatas}>Modifier</button>
         </div>
       </div>
     </div>
