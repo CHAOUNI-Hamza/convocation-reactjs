@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import Swal from 'sweetalert2';
 import * as XLSX from 'xlsx';
-import '../../css/users.css';
+import '../../css/global.css';
 
 function Professeurs() {
   const [datas, setDatas] = useState([]);
@@ -17,18 +17,37 @@ function Professeurs() {
   });
   const [editData, setEditData] = useState(null);
 
-  const fetchData = async () => {
-    setError(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+
+  const fetchData = async (page = 1) => {
     try {
-      const response = await axios.get('/teachers');
+      const response = await axios.get(`/teachers?page=${page}`);
       setDatas(response.data.data);
+      setCurrentPage(page);
+      setTotalPages(response.data.meta.last_page); // Assurez-vous que votre API retourne `meta.last_page`
     } catch (error) {
-      console.error('Error fetching data:', error);
+      console.error("Error fetching data:", error);
+      setError("Une erreur s'est produite lors du chargement des données.");
     }
   };
+
+  const fetchAllDataForExcel = async () => {
+    try {
+      // Ici vous faites une requête pour récupérer toutes les données sans pagination
+      const response = await axios.get('/teachers/all'); // Vérifiez si votre API permet cela
+      return response.data.data; // Retourne toutes les données sans pagination
+    } catch (error) {
+      console.error("Error fetching all data:", error);
+      setError("Une erreur s'est produite lors du chargement des données.");
+    }
+  };
+
+  
   useEffect(() => {
     fetchData();
-  });
+    fetchAllDataForExcel();
+  }, []); // Ajout d'un tableau de dépendances vide pour exécuter fetchData une seule fois au montage  
   const handleNewDataChange = (e) => {
     const { name, value } = e.target;
     setNewData((newData) => ({ ...newData, [name]: value }));
@@ -39,73 +58,91 @@ function Professeurs() {
     setEditData((editData) => ({ ...editData, [name]: value }));
   };
 
-  const addData = async () => {
-    const { sum_number, name, first_name, name_ar, first_name_ar, email } = newData;
-    if (!sum_number || !name || !first_name || !name_ar || !first_name_ar || !email ) {
+  const validateForm = ({ sum_number, name, first_name, name_ar, first_name_ar, email }) => {
+    if (!sum_number || !name || !first_name || !name_ar || !first_name_ar || !email) {
       Swal.fire({
         icon: 'error',
-        title: 'خطأ',
-        text: 'يرجى ملء جميع الحقول المطلوبة!',
+        title: 'Erreur',
+        text: 'Veuillez remplir tous les champs obligatoires !',
       });
-      return;
+      return false;
     }
-    try {
-      await axios.post('admin/teachers', { sum_number, name, first_name, name_ar, first_name_ar, email });
+  
+    const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
+    if (!emailRegex.test(email)) {
       Swal.fire({
-        title: "تم",
-        text: "تمت الإضافة بنجاح.",
+        icon: 'error',
+        title: 'Erreur',
+        text: "L'email est invalide !",
+      });
+      return false;
+    }
+    
+    return true;
+  };
+  
+
+  const addData = async () => {
+    if (!validateForm(newData)) return;
+    try {
+      await axios.post('teachers', newData);
+      Swal.fire({
+        title: "Ok",
+        text: "Ajouté avec succès.",
         icon: "success"
       }).then(() => {
         document.getElementById('closeModalBtn').click();
-      });
-      fetchData();
-      setNewData({
-        titre: '',
-        revue: '',
-        url: '',
-        annee: '',
-        user_id: '',
+        setNewData({
+          sum_number: '',
+          name: '',
+          first_name: '',
+          name_ar: '',
+          first_name_ar: '',
+          email: '',
+        });        
+        fetchData();
       });
     } catch (error) {
-      handleApiError(error, 'حدث خطأ أثناء الإضافة .');
+      handleApiError(error, "Une erreur s'est produite lors de l'ajout.");
     }
   };
+  
 
-  const editDatas = async () => {
+  const updateData = async () => {
+    if (!validateForm(editData)) return;
     try {
-      const { id, sum_number, name, first_name, name_ar, first_name_ar, email } = editData;
-      await axios.put(`admin/teachers/${id}`, { sum_number, name, first_name, name_ar, first_name_ar, email });
+      await axios.put(`teachers/${editData.id}`, editData );
       fetchData();
       Swal.fire({
-        title: "تم",
-        text: "تم تحديث المعلومات بنجاح.",
+        title: "Ok",
+        text: "Les informations ont été mises à jour avec succès.",
         icon: "success"
       }).then(() => {
         document.getElementById('closeEditModalBtn').click();
       });
     } catch (error) {
-      handleApiError(error, 'حدث خطأ أثناء تحديث المعلومات .');
+      handleApiError(error, "Une erreur s'est produite lors de la mise à jour des informations.");
     }
   };
-
+  
   const deleteData = async (id) => {
     try {
       const result = await Swal.fire({
-        title: "هل أنت متأكد؟",
-        text: "لن تتمكن من التراجع عن هذا!",
+        title: "Êtes-vous sûr ?",
+        text: "Vous ne pourrez pas revenir en arrière !",
         icon: "warning",
         showCancelButton: true,
         confirmButtonColor: "#3085d6",
         cancelButtonColor: "#d33",
-        confirmButtonText: "نعم، احذفها!"
+        confirmButtonText: "Oui, supprimez-le !"
       });
 
       if (result.isConfirmed) {
         await axios.delete(`/teachers/${id}`);
         fetchData();
         Swal.fire({
-          title: "تم الحذف!",
-          text: "تم الحذف بنجاح.",
+          title: "Supprimé !",
+          text: "Supprimé avec succès.",
           icon: "success"
         });
       }
@@ -152,10 +189,12 @@ function Professeurs() {
   return wb;
 };
 
-const downloadExcel = () => {
-  const wb = convertToExcel(datas);
-  XLSX.writeFile(wb, 'professeurs.xlsx');
+const downloadExcel = async () => {
+  const allData = await fetchAllDataForExcel();  // Récupérer toutes les données pour l'export
+  const wb = convertToExcel(allData);  // Convertir ces données en Excel
+  XLSX.writeFile(wb, 'professeurs.xlsx');  // Télécharger le fichier Excel
 };
+
 
   
 
@@ -241,6 +280,47 @@ Télécharger
                   </tr>
                 ))}
               </tbody>
+
+
+
+
+
+
+
+
+
+              <div className="pagination p-2 ml-3">
+  <p
+    className="text-white bg-primary p-2" style={{ cursor: 'pointer' }}
+    disabled={currentPage === 1}
+    onClick={() => fetchData(currentPage - 1)}
+  >
+    Précédent
+  </p>
+
+  <span className="p-2" style={{ margin: "0 10px" }}>
+    Page {currentPage} sur {totalPages}
+  </span>
+
+  <p
+    className="text-white bg-primary p-2" style={{ cursor: 'pointer' }}
+    disabled={currentPage === totalPages}
+    onClick={() => fetchData(currentPage + 1)}
+  >
+    Suivant
+  </p>
+</div>
+
+
+
+
+
+
+
+
+
+
+
             </table>
             {error && (
               <div className="alert alert-danger" role="alert">
@@ -337,7 +417,7 @@ Télécharger
           <button type="button" className="btn btn-secondary" style={{borderRadius: '0',
     padding: '3px 16px'}} id="closeEditModalBtn" data-dismiss="modal">Annuler</button>
           <button type="button" className="btn btn-primary" style={{borderRadius: '0',
-    padding: '3px 16px'}} onClick={editDatas}>Modifier</button>
+    padding: '3px 16px'}} onClick={updateData}>Modifier</button>
         </div>
       </div>
     </div>
