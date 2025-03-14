@@ -24,7 +24,7 @@ function Examens() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
-  const fetchData = async (page = 1) => {
+  /*const fetchData = async (page = 1) => {
     try {
       const response = await axios.get(`/exams?page=${page}`);
       setDatas(response.data.data);
@@ -34,11 +34,46 @@ function Examens() {
       console.error("Error fetching data:", error);
       setError("Une erreur s'est produite lors du chargement des données.");
     }
+  };*/
+  const fetchData = async (page = 1) => {
+    try {
+      const response = await axios.get(`/exams?page=${page}`);
+      const examens = response.data.data;
+  
+      // Récupérer les professeurs pour chaque examen 
+      const updatedExamens = await Promise.all(
+        examens.map(async (exam) => {
+          const profs = await fetchProfesseursDisponibles(exam.date, exam.creneau_horaire);
+          return { ...exam, available_teachers: profs };
+        })
+      );
+  
+      setDatas(updatedExamens);
+      setCurrentPage(page);
+      setTotalPages(response.data.meta.last_page);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      setError("Une erreur s'est produite lors du chargement des données.");
+    }
   };
+  
+
+  const fetchProfesseursDisponibles = async (date, creneau_horaire) => {
+    try {
+      const response = await axios.get('/professeurs-disponibles', {
+        params: { date, creneau_horaire }
+      });
+      return response.data.data; // Retourne la liste des professeurs disponibles
+    } catch (error) {
+      console.error("Erreur lors de la récupération des enseignants", error);
+      return [];
+    }
+  };
+  
 
   const fetchTeachers = async () => {
     try {
-      const response = await axios.get('/teachers/all'); // Remplacez par votre API
+      const response = await axios.get('/professeurs-disponibles'); // Remplacez par votre API
       setTeachers(response.data.data); // Stocke les enseignants dans l'état
     } catch (error) {
       console.error("Erreur lors de la récupération des enseignants", error);
@@ -277,6 +312,14 @@ Télécharger
                     <td>{data.semestre}</td>
                     <td>{data.groupe}</td>
                     <td>{data.lib_mod}</td>
+
+
+
+
+
+
+
+
                     <td>
         {data.teachers && data.teachers.length > 0
           ? data.teachers.map((teacher, index) => (
@@ -376,9 +419,22 @@ Télécharger
   </div>
   
   <div className="form-group">
-    <label htmlFor="creneau_horaire">Creneau Horaire</label>
-    <input type="time" className="form-control" id="creneau_horaire" name="creneau_horaire" value={newData.creneau_horaire} onChange={handleNewDataChange} required />
-  </div>
+  <label htmlFor="creneau_horaire">Creneau Horaire</label>
+  <select
+    className="form-control"
+    id="creneau_horaire"
+    name="creneau_horaire"
+    value={newData.creneau_horaire}
+    onChange={handleNewDataChange}
+    required
+  >
+    <option value="09:00">09:00</option>
+    <option value="11:00">11:00</option>
+    <option value="14:00">14:00</option>
+    <option value="16:30">16:30</option>
+  </select>
+</div>
+
   
   <div className="form-group">
     <label htmlFor="module">Module</label>
@@ -461,8 +517,21 @@ Télécharger
 
       <div className="form-group">
         <label htmlFor="creneau_horaire">Créneau Horaire</label>
-        <input type="time" className="form-control" id="creneau_horaire" name="creneau_horaire" value={editData.creneau_horaire} onChange={handleEditDataChange} required />
+        <select
+          className="form-control"
+          id="creneau_horaire"
+          name="creneau_horaire"
+          value={editData.creneau_horaire}
+          onChange={handleEditDataChange}
+          required
+        >
+          <option value="09:00">09:00</option>
+          <option value="11:00">11:00</option>
+          <option value="14:00">14:00</option>
+          <option value="16:30">16:30</option>
+        </select>
       </div>
+
 
       <div className="form-group">
         <label htmlFor="module">Module</label>
@@ -508,10 +577,11 @@ Télécharger
   required
 >
 
-    {teachers.map((teacher) => (
-      <option key={teacher.id} value={teacher.id}>
-        {teacher.name}
-      </option>
+    {/* Loop through available teachers for the selected exam */}
+                {editData.available_teachers && editData.available_teachers.map((teacher) => (
+                  <option key={teacher.id} value={teacher.id}>
+                    {teacher.name}
+                  </option>
     ))}
   </select>
 </div>
