@@ -7,6 +7,7 @@ import '../../css/global.css';
 function Professeurs() {
   const [datas, setDatas] = useState([]);
   const [error, setError] = useState(null);
+  const [selectedExams, setSelectedExams] = useState([]);
   const [newData, setNewData] = useState({
     sum_number: '',
     name: '',
@@ -31,6 +32,17 @@ function Professeurs() {
       setError("Une erreur s'est produite lors du chargement des données.");
     }
   };
+
+  const openShowModal = async (professeur) => {
+    try {
+      const response = await axios.get(`/professeurs/${professeur.id}/exams`);
+      setSelectedExams(response.data); // Stocke les examens dans l'état
+    } catch (error) {
+      console.error("Erreur lors du chargement des examens :", error);
+      setSelectedExams([]); // Vide l'état en cas d'erreur
+    }
+  };
+  
 
   const fetchAllDataForExcel = async () => {
     try {
@@ -276,6 +288,16 @@ Télécharger
                       >
                         <i className="fa fa-edit" aria-hidden="true"></i>
                       </a>
+                      <a
+                        type='button'
+                        data-toggle="modal"
+                        data-target="#showModal"
+                        style={{ color: '#007bff', marginRight: '10px' }}
+                        aria-label="Show"
+                        onClick={() => openShowModal(data)}
+                      >
+                        <i class="fa fa-eye" aria-hidden="true"></i>
+                      </a>
                     </td>
                   </tr>
                 ))}
@@ -310,16 +332,6 @@ Télécharger
     Suivant
   </p>
 </div>
-
-
-
-
-
-
-
-
-
-
 
             </table>
             {error && (
@@ -423,6 +435,49 @@ Télécharger
     </div>
   </div>
 )}
+
+<div className="modal fade" id="showModal" tabIndex="-1" role="dialog" aria-labelledby="showModalLabel" aria-hidden="true">
+  <div className="modal-dialog modal-lg" role="document">
+    <div className="modal-content">
+      <div className="modal-header">
+        <h5 className="modal-title font-arabic" id="showModalLabel">Examens du professeur</h5>
+      </div>
+      <div className="modal-body">
+        {selectedExams.length > 0 ? (
+          <table className="table">
+            <thead>
+              <tr>
+                <th>Module</th>
+                <th>Semestre</th>
+                <th>Date</th>
+                <th>Créneau Horaire</th>
+                <th>Groupe</th>
+              </tr>
+            </thead>
+            <tbody>
+              {selectedExams.map((exam) => (
+                <tr key={exam.id}>
+                  <td>{exam.module}</td>
+                  <td>{exam.semestre}</td>
+                  <td>{exam.date}</td>
+                  <td>{exam.creneau_horaire}</td>
+                  <td>{exam.groupe}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : (
+          <p>Aucun examen trouvé pour ce professeur.</p>
+        )}
+      </div>
+      <div className="modal-footer">
+        <button type="button" className="btn btn-secondary" data-dismiss="modal">Fermer</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
 
     </div>
   );

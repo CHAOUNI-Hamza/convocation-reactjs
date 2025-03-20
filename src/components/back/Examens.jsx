@@ -7,7 +7,9 @@ import '../../css/global.css';
 function Examens() {
   const [datas, setDatas] = useState([]);
   const [error, setError] = useState(null);
+  const [showInputs, setShowInputs] = useState(false);
   const [teachers, setTeachers] = useState([]);
+  const [selectedExams, setSelectedExams] = useState([]);
   const [newData, setNewData] = useState({
          date: '',
           creneau_horaire: '',
@@ -23,18 +25,7 @@ function Examens() {
 
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-
-  /*const fetchData = async (page = 1) => {
-    try {
-      const response = await axios.get(`/exams?page=${page}`);
-      setDatas(response.data.data);
-      setCurrentPage(page);
-      setTotalPages(response.data.meta.last_page); // Assurez-vous que votre API retourne `meta.last_page`
-    } catch (error) {
-      console.error("Error fetching data:", error);
-      setError("Une erreur s'est produite lors du chargement des données.");
-    }
-  };*/
+  
   const fetchData = async (page = 1) => {
     try {
       const response = await axios.get(`/exams?page=${page}`);
@@ -56,8 +47,6 @@ function Examens() {
       setError("Une erreur s'est produite lors du chargement des données.");
     }
   };
-  
-
   const fetchProfesseursDisponibles = async (date, creneau_horaire) => {
     try {
       const response = await axios.get('/professeurs-disponibles', {
@@ -88,6 +77,16 @@ function Examens() {
     } catch (error) {
       console.error("Error fetching all data:", error);
       setError("Une erreur s'est produite lors du chargement des données.");
+    }
+  };
+
+  const openShowModal = async (professeur) => {
+    try {
+      const response = await axios.get(`/professeurs/${professeur}/exams`);
+      setSelectedExams(response.data); // Stocke les examens dans l'état
+    } catch (error) {
+      console.error("Erreur lors du chargement des examens :", error);
+      setSelectedExams([]); // Vide l'état en cas d'erreur
     }
   };
 
@@ -207,9 +206,9 @@ function Examens() {
     setEditData(professeur);
   };
 
-  const clearFilters = () => {
+  /*const clearFilters = () => {
     fetchData();
-  };
+  };*/
 
   const handleApiError = (error, defaultMessage) => {
     if (error.response && error.response.data.errorDate) {
@@ -312,33 +311,33 @@ Télécharger
                     <td>{data.semestre}</td>
                     <td>{data.groupe}</td>
                     <td>{data.lib_mod}</td>
-
-
-
-
-
-
-
-
                     <td>
         {data.teachers && data.teachers.length > 0
           ? data.teachers.map((teacher, index) => (
               <React.Fragment key={index}>
-                {teacher.name}
+                  <span>{teacher.name}</span>
+                  <span class="ml-2 badge badge-primary">
+                  {teacher.total_exams}
+                  </span>
+                  <a
+                  onClick={() => openShowModal(teacher.id)}
+                  data-toggle="modal"
+                  data-target="#showModal"
+                  ><i class="ml-2 fa fa-eye text-success" aria-hidden="true"></i></a>
                 <br />
               </React.Fragment>
             ))
           : 'Aucun'}
       </td>
                     <td>
-                      <a
+                      {/*<a
                         href="#"
                         style={{ color: '#ff0000b3', marginRight: '10px' }}
                         aria-label="Delete"
                         onClick={() => deleteData(data.id)}
                       >
                         <i className="fa fa-trash" aria-hidden="true"></i>
-                      </a>
+                      </a>*/}
                       <a
                         type='button'
                         data-toggle="modal"
@@ -510,6 +509,43 @@ Télécharger
         </div>
         <div className="modal-body">
         <form>
+        <div className="form-group">
+  <label htmlFor="teacher_ids">Professeurs</label>
+  <select
+  className="form-control"
+  id="teacher_ids"
+  name="teacher_ids"
+  multiple
+  value={editData.teacher_ids || []}
+  onChange={(e) =>
+    setEditData({ ...editData, teacher_ids: [...e.target.selectedOptions].map(o => o.value) })
+  }
+  required
+  size="20"
+>
+{/* Option vide pour envoyer [] si aucune sélection */}
+<option value="" className='text-red'>-- Aucun professeur --</option>
+    {/* Loop through available teachers for the selected exam */}
+                {editData.available_teachers && editData.available_teachers.map((teacher) => (
+                  <option key={teacher.id} value={teacher.id}>
+                    {teacher.name}
+                    &nbsp;&nbsp;
+                  {teacher.total_exams}
+                  </option>
+    ))}
+  </select>
+</div>
+{/* Bouton pour afficher/masquer les inputs */}
+<button
+              type="button"
+              className="btn btn-info text-white mb-2"
+              style={{ borderRadius: "0", padding: "3px 16px" }}
+              onClick={() => setShowInputs(!showInputs)}
+            >
+              {showInputs ? "Masquer les champs" : "Afficher les champs"}
+            </button>
+{showInputs && (
+                <>
       <div className="form-group">
         <label htmlFor="date">Date</label>
         <input type="date" className="form-control" id="date" name="date" value={editData.date} onChange={handleEditDataChange} required />
@@ -562,29 +598,9 @@ Télécharger
         <label htmlFor="lib_mod">Libellé du Module</label>
         <input type="text" className="form-control" id="lib_mod" name="lib_mod" value={editData.lib_mod} onChange={handleEditDataChange} required />
       </div>
-
-      <div className="form-group">
-  <label htmlFor="teacher_ids">Professeurs</label>
-  <select
-  className="form-control"
-  id="teacher_ids"
-  name="teacher_ids"
-  multiple
-  value={editData.teacher_ids || []}
-  onChange={(e) =>
-    setEditData({ ...editData, teacher_ids: [...e.target.selectedOptions].map(o => o.value) })
-  }
-  required
->
-
-    {/* Loop through available teachers for the selected exam */}
-                {editData.available_teachers && editData.available_teachers.map((teacher) => (
-                  <option key={teacher.id} value={teacher.id}>
-                    {teacher.name}
-                  </option>
-    ))}
-  </select>
-</div>
+      </>
+              )}
+      
 
     </form>
         </div>
@@ -598,6 +614,47 @@ Télécharger
     </div>
   </div>
 )}
+
+<div className="modal fade" id="showModal" tabIndex="-1" role="dialog" aria-labelledby="showModalLabel" aria-hidden="true">
+  <div className="modal-dialog modal-lg" role="document">
+    <div className="modal-content">
+      <div className="modal-header">
+        <h5 className="modal-title font-arabic" id="showModalLabel">Examens du professeur</h5>
+      </div>
+      <div className="modal-body">
+        {selectedExams.length > 0 ? (
+          <table className="table">
+            <thead>
+              <tr>
+                <th>Module</th>
+                <th>Semestre</th>
+                <th>Date</th>
+                <th>Créneau Horaire</th>
+                <th>Groupe</th>
+              </tr>
+            </thead>
+            <tbody>
+              {selectedExams.map((exam) => (
+                <tr key={exam.id}>
+                  <td>{exam.module}</td>
+                  <td>{exam.semestre}</td>
+                  <td>{exam.date}</td>
+                  <td>{exam.creneau_horaire}</td>
+                  <td>{exam.groupe}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : (
+          <p>Aucun examen trouvé pour ce professeur.</p>
+        )}
+      </div>
+      <div className="modal-footer">
+        <button type="button" className="btn btn-secondary" data-dismiss="modal">Fermer</button>
+      </div>
+    </div>
+  </div>
+</div>
 
     </div>
   );
