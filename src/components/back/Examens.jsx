@@ -23,12 +23,43 @@ function Examens() {
   });
   const [editData, setEditData] = useState(null);
 
+
+  // Définir les états pour chaque filtre
+  const [date, setDate] = useState('');
+  const [module, setModule] = useState('');
+  const [salle, setSalle] = useState('');
+  const [filiere, setFiliere] = useState('');
+  const [semestre, setSemestre] = useState('');
+  const [groupe, setGroupe] = useState('');
+
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+
+  // Fonction pour réinitialiser tous les filtres
+  const clearFilters = () => {
+    setDate('');
+    setModule('');
+    setSalle('');
+    setFiliere('');
+    setSemestre('');
+    setGroupe('');
+    fetchData();
+  };
   
   const fetchData = async (page = 1) => {
     try {
-      const response = await axios.get(`/exams?page=${page}`);
+      // Construction des paramètres de la requête avec les filtres
+      const params = {
+        page,
+        date,
+        module,
+        salle,
+        filiere,
+        semestre,
+        groupe,
+      };
+
+      const response = await axios.get('/exams', { params });
       const examens = response.data.data;
   
       // Récupérer les professeurs pour chaque examen 
@@ -62,7 +93,7 @@ function Examens() {
 
   const fetchTeachers = async () => {
     try {
-      const response = await axios.get('/professeurs-disponibles'); // Remplacez par votre API
+      const response = await axios.get('/teachers/all'); // Remplacez par votre API
       setTeachers(response.data.data); // Stocke les enseignants dans l'état
     } catch (error) {
       console.error("Erreur lors de la récupération des enseignants", error);
@@ -265,7 +296,7 @@ const downloadExcel = async () => {
         <div className="card">
           <div className="card-header" style={{ textAlign: 'right' }}>
           <h3 className="card-title font-arabic p-2" style={{ borderBottom: 'none',
-    paddingBottom: '0' }}> Liste des professeurs</h3>
+    paddingBottom: '0' }}> Liste des examens</h3>
           <button
   type="button"
   className="btn btn-success"
@@ -283,6 +314,66 @@ Télécharger
     <div className="card-tools" style={{ marginRight: '10rem' }}>
           </div>
           <div className="filter-group">
+            <div className='row'>
+              <div className='col-12'>
+                <div className='form-group'>
+        <input
+          type="date"
+          className='form-control'
+          value={date}
+          onChange={(e) => setDate(e.target.value)}
+          placeholder="Filtrer par date"
+        />
+        </div>
+              </div>
+              <div className='col-12'>
+                <div className='form-group'>
+                <input
+          type="text"
+          value={module}
+          onChange={(e) => setModule(e.target.value)}
+          placeholder="Filtrer par module"
+        />
+                </div>
+              </div>
+            </div>
+            {/* Formulaire pour les filtres */}
+      <div className='form-group'>
+        
+        <div className='form-group'></div>
+        <div className='form-group'></div>
+        <div className='form-group'></div>
+        <div className='form-group'></div>
+        
+        
+        <input
+          type="text"
+          value={salle}
+          onChange={(e) => setSalle(e.target.value)}
+          placeholder="Filtrer par salle"
+        />
+        <input
+          type="text"
+          value={filiere}
+          onChange={(e) => setFiliere(e.target.value)}
+          placeholder="Filtrer par filière"
+        />
+        <input
+          type="text"
+          value={semestre}
+          onChange={(e) => setSemestre(e.target.value)}
+          placeholder="Filtrer par semestre"
+        />
+        <input
+          type="text"
+          value={groupe}
+          onChange={(e) => setGroupe(e.target.value)}
+          placeholder="Filtrer par groupe"
+        />
+        {/* Bouton pour réinitialiser les filtres */}
+      <button onClick={clearFilters}>Réinitialiser les filtres</button>
+        <button onClick={() => fetchData(1)}>Filtrer</button>
+      </div>
           </div>
           </div>
           <div className="card-body table-responsive p-0">
@@ -290,21 +381,21 @@ Télécharger
               <thead>
                 <tr>
                   <th>Date</th>
-                  <th>Creneau horaire</th>
+                  <th>Créneau horaire</th>
                   <th>Module</th>
                   <th>Salle</th>
-                  <th>Filiere</th>
+                  <th>Filière</th>
                   <th>Semestre</th>
                   <th>Groupe</th>
-                  <th>Lib mod</th>
-                  <th>Teacher</th>
+                  <th>Libellé module</th>
+                  <th>Professeurs</th>
                 </tr>
               </thead>
               <tbody>
                 {datas.map(data => (
                   <tr key={data.id}>
                     <td>{data.date}</td>
-                    <td>{data.creneau_horaire}</td>
+                    <td>{data.creneau_horaire.slice(0, 5)}</td>
                     <td>{data.module}</td>
                     <td>{data.salle}</td>
                     <td>{data.filiere}</td>
@@ -418,7 +509,7 @@ Télécharger
   </div>
   
   <div className="form-group">
-  <label htmlFor="creneau_horaire">Creneau Horaire</label>
+  <label htmlFor="creneau_horaire">Créneau horaire</label>
   <select
     className="form-control"
     id="creneau_horaire"
@@ -428,9 +519,11 @@ Télécharger
     required
   >
     <option value="09:00">09:00</option>
-    <option value="11:00">11:00</option>
+    <option value="11:30">11:30</option>
     <option value="14:00">14:00</option>
+    <option value="14:30">14:30</option>
     <option value="16:30">16:30</option>
+    <option value="17:00">17:00</option>
   </select>
 </div>
 
@@ -472,15 +565,19 @@ Télécharger
     id="teacher_ids"
     name="teacher_ids"
     multiple
-    value={newData.teacher_ids}
+    value={newData.teacher_ids || []}
     onChange={(e) =>
       setNewData({ ...newData, teacher_ids: [...e.target.selectedOptions].map(o => o.value) })
     }
     required
+    size="5"
   >
+    <option value="" className='text-red'>-- Aucun professeur --</option>
     {teachers.map((teacher) => (
       <option key={teacher.id} value={teacher.id}>
         {teacher.name}
+        &nbsp;&nbsp;
+                  {teacher.total_exams}
       </option>
     ))}
   </select>
@@ -552,7 +649,7 @@ Télécharger
       </div>
 
       <div className="form-group">
-        <label htmlFor="creneau_horaire">Créneau Horaire</label>
+        <label htmlFor="creneau_horaire">Créneau horaire</label>
         <select
           className="form-control"
           id="creneau_horaire"
@@ -561,10 +658,12 @@ Télécharger
           onChange={handleEditDataChange}
           required
         >
-          <option value="09:00">09:00</option>
-          <option value="11:00">11:00</option>
-          <option value="14:00">14:00</option>
-          <option value="16:30">16:30</option>
+          <option value="09:00:00">09:00</option>
+          <option value="11:30:00">11:30</option>
+          <option value="14:00:00">14:00</option>
+          <option value="14:30:00">14:30</option>
+          <option value="16:30:00">16:30</option>
+          <option value="17:00:00">17:00</option>
         </select>
       </div>
 
@@ -639,7 +738,7 @@ Télécharger
                   <td>{exam.module}</td>
                   <td>{exam.semestre}</td>
                   <td>{exam.date}</td>
-                  <td>{exam.creneau_horaire}</td>
+                  <td>{exam.creneau_horaire.slice(0, 5)}</td>
                   <td>{exam.groupe}</td>
                 </tr>
               ))}
