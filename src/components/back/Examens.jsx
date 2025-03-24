@@ -9,7 +9,16 @@ function Examens() {
   const [error, setError] = useState(null);
   const [showInputs, setShowInputs] = useState(false);
   const [teachers, setTeachers] = useState([]);
-  const [selectedExams, setSelectedExams] = useState([]);
+  const [selectedExams, setSelectedExams] = useState([{ exams: [] }]);
+  const [editData, setEditData] = useState(null);
+  const [date, setDate] = useState('');
+  const [module, setModule] = useState('');
+  const [salle, setSalle] = useState('');
+  const [filiere, setFiliere] = useState('');
+  const [semestre, setSemestre] = useState('');
+  const [groupe, setGroupe] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [newData, setNewData] = useState({
          date: '',
           creneau_horaire: '',
@@ -21,34 +30,8 @@ function Examens() {
           lib_mod: '',
           teacher_ids: [],
   });
-  const [editData, setEditData] = useState(null);
-
-
-  // Définir les états pour chaque filtre
-  const [date, setDate] = useState('');
-  const [module, setModule] = useState('');
-  const [salle, setSalle] = useState('');
-  const [filiere, setFiliere] = useState('');
-  const [semestre, setSemestre] = useState('');
-  const [groupe, setGroupe] = useState('');
-
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-
-  // Fonction pour réinitialiser tous les filtres
-  const clearFilters = () => {
-    setDate('');
-    setModule('');
-    setSalle('');
-    setFiliere('');
-    setSemestre('');
-    setGroupe('');
-    fetchData();
-  };
-  
   const fetchData = async (page = 1) => {
     try {
-      // Construction des paramètres de la requête avec les filtres
       const params = {
         page,
         date,
@@ -58,23 +41,19 @@ function Examens() {
         semestre,
         groupe,
       };
-
       const response = await axios.get('/exams', { params });
       const examens = response.data.data;
-  
-      // Récupérer les professeurs pour chaque examen 
       const updatedExamens = await Promise.all(
         examens.map(async (exam) => {
           const profs = await fetchProfesseursDisponibles(exam.date, exam.creneau_horaire);
           return { ...exam, available_teachers: profs };
         })
       );
-  
       setDatas(updatedExamens);
       setCurrentPage(page);
       setTotalPages(response.data.meta.last_page);
     } catch (error) {
-      console.error("Error fetching data:", error);
+      console.error("Erreur lors de la récupération des données :", error);
       setError("Une erreur s'est produite lors du chargement des données.");
     }
   };
@@ -83,60 +62,46 @@ function Examens() {
       const response = await axios.get('/professeurs-disponibles', {
         params: { date, creneau_horaire }
       });
-      return response.data.data; // Retourne la liste des professeurs disponibles
+      return response.data.data;
     } catch (error) {
       console.error("Erreur lors de la récupération des enseignants", error);
       return [];
     }
   };
-  
-
   const fetchTeachers = async () => {
     try {
-      const response = await axios.get('/teachers/all'); // Remplacez par votre API
-      setTeachers(response.data.data); // Stocke les enseignants dans l'état
+      const response = await axios.get('/teachers/all'); 
+      setTeachers(response.data.data);
     } catch (error) {
       console.error("Erreur lors de la récupération des enseignants", error);
     }
   };
-
   const fetchAllDataForExcel = async () => {
     try {
-      // Ici vous faites une requête pour récupérer toutes les données sans pagination
-      const response = await axios.get('/exams/all'); // Vérifiez si votre API permet cela
-      return response.data.data; // Retourne toutes les données sans pagination
+      const response = await axios.get('/exams/all');
+      return response.data.data;
     } catch (error) {
-      console.error("Error fetching all data:", error);
+      console.error("Erreur lors de la récupération de toutes les données :", error);
       setError("Une erreur s'est produite lors du chargement des données.");
     }
   };
-
   const openShowModal = async (professeur) => {
     try {
       const response = await axios.get(`/professeurs/${professeur}/exams`);
-      setSelectedExams(response.data); // Stocke les examens dans l'état
+      setSelectedExams(response.data);
     } catch (error) {
       console.error("Erreur lors du chargement des examens :", error);
-      setSelectedExams([]); // Vide l'état en cas d'erreur
+      setSelectedExams([]);
     }
   };
-
-  
-  useEffect(() => {
-    fetchData();
-    fetchAllDataForExcel();
-    fetchTeachers();
-  }, []); // Ajout d'un tableau de dépendances vide pour exécuter fetchData une seule fois au montage  
   const handleNewDataChange = (e) => {
     const { name, value } = e.target;
     setNewData((newData) => ({ ...newData, [name]: value }));
   };
-
   const handleEditDataChange = (e) => {
     const { name, value } = e.target;
     setEditData((editData) => ({ ...editData, [name]: value }));
   };
-
   const validateForm = ({ date, creneau_horaire, module, salle, filiere, semestre, groupe , lib_mod, teacher_ids}) => {
     if (!date || !creneau_horaire || !module || !salle || !filiere || !semestre || !groupe || !lib_mod || !teacher_ids) {
       Swal.fire({
@@ -148,8 +113,6 @@ function Examens() {
     }
     return true;
   };
-  
-
   const addData = async () => {
     if (!validateForm(newData)) return;
     try {
@@ -157,7 +120,6 @@ function Examens() {
         ...newData,
         teacher_ids: Array.isArray(newData.teacher_ids) ? newData.teacher_ids : [newData.teacher_ids],
       };
-  
       await axios.post('/exams', payload);
       Swal.fire({
         title: "Ok",
@@ -182,9 +144,6 @@ function Examens() {
       handleApiError(error, "Une erreur s'est produite lors de l'ajout.");
     }
   };
-  
-  
-
   const updateData = async () => {
     if (!validateForm(editData)) return;
     try {
@@ -204,8 +163,6 @@ function Examens() {
       handleApiError(error, "Une erreur s'est produite lors de la mise à jour des informations.");
     }
   };
-  
-  
   const deleteData = async (id) => {
     try {
       const result = await Swal.fire({
@@ -229,23 +186,17 @@ function Examens() {
       }
     } catch (error) {
       console.error('Error deleting Professeur:', error);
-      setError('حدث خطأ أثناء الحذف .');
+      setError("Une erreur s'est produite lors de la suppression.");
     }
   };
-
   const openEditModal = (professeur) => {
     setEditData(professeur);
   };
-
-  /*const clearFilters = () => {
-    fetchData();
-  };*/
-
   const handleApiError = (error, defaultMessage) => {
     if (error.response && error.response.data.errorDate) {
       Swal.fire({
         icon: 'error',
-        title: 'خطأ',
+        title: 'Erreur',
         text: error.response.data.errorDate,
       });
     } else {
@@ -253,32 +204,34 @@ function Examens() {
       setError(defaultMessage);
     }
   };
-
   const convertToExcel = (data) => {
-  const ws = XLSX.utils.json_to_sheet(data.map(professeur => ({
-    'Som': professeur.sum_number,
-    'Nom': professeur.name,
-    'Prénom': professeur.first_name,
-    'Nom Ar': professeur.name_ar,
-    'Prénom Ar': professeur.first_name_ar,
-    'Email': professeur.email,
+  const ws = XLSX.utils.json_to_sheet(data.map(exam => ({
+    'module': exam.module,
+    'semestre': exam.semestre,
+    'date': exam.date,
+    'creneau_horaire': exam.creneau_horaire,
+    'groupe': exam.groupe,
+    'salle': exam.salle,
+    'lib_mod': exam.lib_mod,
+    'filiere': exam.filiere,
   })));
-
   const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Professeurs');
-
-  return wb;
-};
-
-const downloadExcel = async () => {
-  const allData = await fetchAllDataForExcel();  // Récupérer toutes les données pour l'export
-  const wb = convertToExcel(allData);  // Convertir ces données en Excel
-  XLSX.writeFile(wb, 'professeurs.xlsx');  // Télécharger le fichier Excel
-};
-
-
-  
-
+    XLSX.utils.book_append_sheet(wb, ws, 'exams');
+    return wb;
+  };
+  const downloadExcel = async () => {
+    const allData = await fetchAllDataForExcel();  // Récupérer toutes les données pour l'export
+    const wb = convertToExcel(allData);  // Convertir ces données en Excel
+    XLSX.writeFile(wb, 'exams.xlsx');  // Télécharger le fichier Excel
+  };
+  useEffect(() => {
+    fetchData();
+    fetchAllDataForExcel();
+    fetchTeachers();
+  }, []);
+  const clearFilters = () => {
+    fetchData(); setDate(''); setModule(''); setSalle(''); setFiliere(''); setSemestre(''); setGroupe('');
+  };
   return (
     <div className="row font-arabic">
       <div className="col-12">
@@ -308,73 +261,25 @@ const downloadExcel = async () => {
 </svg>
 Télécharger
 </button>
-          
-          
-            
     <div className="card-tools" style={{ marginRight: '10rem' }}>
-          </div>
-          <div className="filter-group">
-            <div className='row'>
-              <div className='col-12'>
-                <div className='form-group'>
-        <input
-          type="date"
-          className='form-control'
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-          placeholder="Filtrer par date"
-        />
+      <div className="filter-group">
+        <div className='form-group d-flex'>
+          <input type="date" className='form-control mr-2' value={date} onChange={(e) => setDate(e.target.value)} placeholder="Filtrer par date"/>
+          <input type="text" className='form-control mr-2' value={module} onChange={(e) => setModule(e.target.value)} placeholder="Filtrer par module"
+          />
+          <input type="text" className='form-control mr-2' value={salle} onChange={(e) => setSalle(e.target.value)} placeholder="Filtrer par salle"
+          />
+          <input type="text" className='form-control mr-2' value={filiere} onChange={(e) => setFiliere(e.target.value)} placeholder="Filtrer par filière"
+          />
+          <input type="text" className='form-control mr-2' value={semestre} onChange={(e) => setSemestre(e.target.value)} placeholder="Filtrer par semestre"
+          />
+          <input type="text" className='form-control mr-2' value={groupe} onChange={(e) => setGroupe(e.target.value)} placeholder="Filtrer par groupe"
+          />
+          <button className='btn btn-primary mr-2' onClick={() => fetchData(1)}>Filtrer</button>
+          <button className='btn btn-danger' onClick={clearFilters}>Réinitialiser</button>
         </div>
-              </div>
-              <div className='col-12'>
-                <div className='form-group'>
-                <input
-          type="text"
-          value={module}
-          onChange={(e) => setModule(e.target.value)}
-          placeholder="Filtrer par module"
-        />
-                </div>
-              </div>
-            </div>
-            {/* Formulaire pour les filtres */}
-      <div className='form-group'>
-        
-        <div className='form-group'></div>
-        <div className='form-group'></div>
-        <div className='form-group'></div>
-        <div className='form-group'></div>
-        
-        
-        <input
-          type="text"
-          value={salle}
-          onChange={(e) => setSalle(e.target.value)}
-          placeholder="Filtrer par salle"
-        />
-        <input
-          type="text"
-          value={filiere}
-          onChange={(e) => setFiliere(e.target.value)}
-          placeholder="Filtrer par filière"
-        />
-        <input
-          type="text"
-          value={semestre}
-          onChange={(e) => setSemestre(e.target.value)}
-          placeholder="Filtrer par semestre"
-        />
-        <input
-          type="text"
-          value={groupe}
-          onChange={(e) => setGroupe(e.target.value)}
-          placeholder="Filtrer par groupe"
-        />
-        {/* Bouton pour réinitialiser les filtres */}
-      <button onClick={clearFilters}>Réinitialiser les filtres</button>
-        <button onClick={() => fetchData(1)}>Filtrer</button>
       </div>
-          </div>
+    </div>
           </div>
           <div className="card-body table-responsive p-0">
             <table className="table table-hover text-nowrap">
@@ -443,47 +348,27 @@ Télécharger
                   </tr>
                 ))}
               </tbody>
-
-
-
-
-
-
-
-
-
               <div className="pagination p-2 ml-3">
-  <p
-    className="text-white bg-primary p-2" style={{ cursor: 'pointer' }}
-    disabled={currentPage === 1}
-    onClick={() => fetchData(currentPage - 1)}
-  >
-    Précédent
-  </p>
+              <p
+                className="text-white bg-primary p-2" style={{ cursor: 'pointer' }}
+                disabled={currentPage === 1}
+                onClick={() => fetchData(currentPage - 1)}
+              >
+                Précédent
+              </p>
 
-  <span className="p-2" style={{ margin: "0 10px" }}>
-    Page {currentPage} sur {totalPages}
-  </span>
+              <span className="p-2" style={{ margin: "0 10px" }}>
+                Page {currentPage} sur {totalPages}
+              </span>
 
-  <p
-    className="text-white bg-primary p-2" style={{ cursor: 'pointer' }}
-    disabled={currentPage === totalPages}
-    onClick={() => fetchData(currentPage + 1)}
-  >
-    Suivant
-  </p>
-</div>
-
-
-
-
-
-
-
-
-
-
-
+              <p
+                className="text-white bg-primary p-2" style={{ cursor: 'pointer' }}
+                disabled={currentPage === totalPages}
+                onClick={() => fetchData(currentPage + 1)}
+              >
+                Suivant
+              </p>
+            </div>
             </table>
             {error && (
               <div className="alert alert-danger" role="alert">
@@ -493,7 +378,6 @@ Télécharger
           </div>
         </div>
       </div>
-
       {/* Add User Modal */}
       <div className="modal fade" id="exampleModal" tabIndex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div className="modal-dialog" role="document">
@@ -507,7 +391,6 @@ Télécharger
     <label htmlFor="date">Date</label>
     <input type="date" className="form-control" id="date" name="date" value={newData.date} onChange={handleNewDataChange} required />
   </div>
-  
   <div className="form-group">
   <label htmlFor="creneau_horaire">Créneau horaire</label>
   <select
@@ -526,38 +409,30 @@ Télécharger
     <option value="17:00">17:00</option>
   </select>
 </div>
-
-  
   <div className="form-group">
     <label htmlFor="module">Module</label>
     <input type="text" className="form-control" id="module" name="module" value={newData.module} onChange={handleNewDataChange} required />
   </div>
-  
   <div className="form-group">
     <label htmlFor="salle">Salle</label>
     <input type="text" className="form-control" id="salle" name="salle" value={newData.salle} onChange={handleNewDataChange} required />
   </div>
-  
   <div className="form-group">
     <label htmlFor="filiere">Filière</label>
     <input type="text" className="form-control" id="filiere" name="filiere" value={newData.filiere} onChange={handleNewDataChange} required />
   </div>
-  
   <div className="form-group">
     <label htmlFor="semestre">Semestre</label>
     <input type="text" className="form-control" id="semestre" name="semestre" value={newData.semestre} onChange={handleNewDataChange} required />
   </div>
-  
   <div className="form-group">
     <label htmlFor="groupe">Groupe</label>
     <input type="text" className="form-control" id="groupe" name="groupe" value={newData.groupe} onChange={handleNewDataChange} required />
   </div>
-  
   <div className="form-group">
     <label htmlFor="lib_mod">Libellé du Module</label>
     <input type="text" className="form-control" id="lib_mod" name="lib_mod" value={newData.lib_mod} onChange={handleNewDataChange} required />
   </div>
-  
   <div className="form-group">
   <label htmlFor="teacher_ids">Professeurs</label>
   <select
@@ -583,7 +458,6 @@ Télécharger
   </select>
 </div>
 </form>
-
             </div>
             <div className="modal-footer">
               <button type="button" style={{borderRadius: '0',
@@ -594,7 +468,6 @@ Télécharger
           </div>
         </div>
       </div>
-
       {/* Edit User Modal */}
       {/* Edit User Modal */}
 {editData && ( 
@@ -620,9 +493,7 @@ Télécharger
   required
   size="20"
 >
-{/* Option vide pour envoyer [] si aucune sélection */}
 <option value="" className='text-red'>-- Aucun professeur --</option>
-    {/* Loop through available teachers for the selected exam */}
                 {editData.available_teachers && editData.available_teachers.map((teacher) => (
                   <option key={teacher.id} value={teacher.id}>
                     {teacher.name}
@@ -632,7 +503,6 @@ Télécharger
     ))}
   </select>
 </div>
-{/* Bouton pour afficher/masquer les inputs */}
 <button
               type="button"
               className="btn btn-info text-white mb-2"
@@ -699,8 +569,6 @@ Télécharger
       </div>
       </>
               )}
-      
-
     </form>
         </div>
         <div className="modal-footer">
@@ -713,40 +581,39 @@ Télécharger
     </div>
   </div>
 )}
-
 <div className="modal fade" id="showModal" tabIndex="-1" role="dialog" aria-labelledby="showModalLabel" aria-hidden="true">
   <div className="modal-dialog modal-lg" role="document">
     <div className="modal-content">
       <div className="modal-header">
-        <h5 className="modal-title font-arabic" id="showModalLabel">Examens du professeur</h5>
+        <h5 className="modal-title font-arabic" id="showModalLabel">{ selectedExams.first_name } { selectedExams.name }</h5>
       </div>
       <div className="modal-body">
-        {selectedExams.length > 0 ? (
-          <table className="table">
-            <thead>
-              <tr>
-                <th>Module</th>
-                <th>Semestre</th>
-                <th>Date</th>
-                <th>Créneau Horaire</th>
-                <th>Groupe</th>
-              </tr>
-            </thead>
-            <tbody>
-              {selectedExams.map((exam) => (
-                <tr key={exam.id}>
-                  <td>{exam.module}</td>
-                  <td>{exam.semestre}</td>
-                  <td>{exam.date}</td>
-                  <td>{exam.creneau_horaire.slice(0, 5)}</td>
-                  <td>{exam.groupe}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        ) : (
-          <p>Aucun examen trouvé pour ce professeur.</p>
-        )}
+      {selectedExams?.exams?.length > 0 ? (
+  <table className="table">
+    <thead>
+      <tr>
+        <th>Module</th>
+        <th>Semestre</th>
+        <th>Date</th>
+        <th>Créneau Horaire</th>
+        <th>Groupe</th>
+      </tr>
+    </thead>
+    <tbody>
+      {selectedExams.exams.map((exam) => (
+        <tr key={exam.id}>
+          <td>{exam.module}</td>
+          <td>{exam.semestre}</td>
+          <td>{exam.date}</td>
+          <td>{exam.creneau_horaire.slice(0, 5)}</td>
+          <td>{exam.groupe}</td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+) : (
+  <p>Aucun examen trouvé pour ce professeur.</p>
+)}
       </div>
       <div className="modal-footer">
         <button type="button" className="btn btn-secondary" data-dismiss="modal">Fermer</button>
@@ -754,9 +621,7 @@ Télécharger
     </div>
   </div>
 </div>
-
     </div>
   );
 }
-
 export default Examens;

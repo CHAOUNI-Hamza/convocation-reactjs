@@ -3,7 +3,6 @@ import Nav from "../../components/back/Nav";
 import Footer from "../../components/back/Footer";
 import Aside from "../../components/back/Aside";
 import Professeurs from "../../components/back/Professeurs";
-import Sessions from "../../components/back/Sessions";
 import Users from "../../components/back/Users";
 import Examens from "../../components/back/Examens";
 
@@ -16,8 +15,6 @@ function Dashboard({ handleLogout }) {
                 return <Professeurs />;
             case "Examens":
                 return <Examens />;
-            case "Sessions":
-                return <Sessions />;
             default:
                 return <Users />;
         }

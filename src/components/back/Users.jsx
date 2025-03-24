@@ -8,17 +8,10 @@ function Users() {
   const { userInfo } = useContext(UserContext);
   const [users, setUsers] = useState([]);
   const [error, setError] = useState(null);
-  const [LaboInfos, setLaboInfo] = useState([]);
-  const [EquipesInfos, setEquipeInfo] = useState([]);
   const [newUserData, setNewUserData] = useState({
-    nom: '',
-    prénom: '',
-    role: '',
+    name: '',
     email: '',
     password: '',
-    confirmPassword: '',
-    laboratoire_id: '',
-    equipe_id: ''
   });
   const [editUserData, setEditUserData] = useState(null);
   const [editPasswordData, setEditPasswordData] = useState({
@@ -27,52 +20,19 @@ function Users() {
     confirmNewPassword: ''
   });
 
-  const getRoleLabel = (role) => {
-    switch(role) {
-      case 0: return { label: "أستاذ باحث", color: "green" };
-      case 1: return { label: "رئيس الفريق", color: "orange" };
-      case 2: return { label: "رئيس المختبر", color: "blue" };
-      case 3: return { label: "مسؤول", color: "red" };
-      default: return { label: "Unknown", color: "black" };
-    }
-  };
-
   const fetchData = async () => {
     setError(null);
     try {
       const response = await axios.get('/users');
       setUsers(response.data.data);
     } catch (error) {
-      console.error('Error fetching data:', error);
+      console.error('Erreur lors de la récupération des données :', error);
     }
   };
-  useEffect(() => {
-    const fetchLaboAndEquipesData = async () => {
-      try {
-        {/*const laboResponse = await axios.get('/laboratoires');
-        setLaboInfo(laboResponse.data.data);
-        const equipeResponse = await axios.get('/equipes');
-        setEquipeInfo(equipeResponse.data.data);*/}
-      } catch (error) {
-        console.error('Error fetching labo or equipe data!', error);
-      }
-    };
-
-    fetchLaboAndEquipesData();
-    fetchData();
-  }, []);
-
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  
-
   const handleNewUserDataChange = (e) => {
     const { name, value } = e.target;
     setNewUserData({ ...newUserData, [name]: value });
   };
-
   const handleEditUserDataChange = (e) => {
     const { name, value } = e.target;
     setEditUserData({ ...editUserData, [name]: value });
@@ -82,66 +42,60 @@ function Users() {
     const { name, value } = e.target;
     setEditPasswordData({ ...editPasswordData, [name]: value });
   };
-
   const addUser = async () => {
-    const { nom, prénom, role, email, password, confirmPassword, laboratoire_id, equipe_id } = newUserData;
-    if (!nom || !prénom || !role || !email || !password || !confirmPassword || !laboratoire_id || !equipe_id ) {
+    const { name, email, password } = newUserData;
+    if (!name || !email || !password ) {
       Swal.fire({
         icon: 'error',
-        title: 'خطأ',
-        text: 'يرجى ملء جميع الحقول المطلوبة!',
+        title: 'erreur',
+        text: 'Veuillez remplir tous les champs obligatoires !',
       });
       return;
     }
-    if (password !== confirmPassword) {
+    /*if (password !== confirmPassword) {
       Swal.fire({
         icon: 'error',
-        title: 'خطأ',
-        text: 'كلمة المرور وتأكيد كلمة المرور غير متطابقين!',
+        title: 'erreur',
+        text: 'Le mot de passe et la confirmation du mot de passe ne correspondent pas !',
       });
       return;
-    }
+    }*/
     try {
-      await axios.post('/users', { nom, prénom, role, email, password, laboratoire_id, equipe_id });
+      await axios.post('/users', { name, email, password });
       Swal.fire({
         title: "تم",
-        text: "تمت إضافة مستخدم جديد بنجاح.",
+        text: "Un nouvel utilisateur a été ajouté avec succès.",
         icon: "success"
       }).then(() => {
         document.getElementById('closeModalBtn').click();
       });
       fetchData();
       setNewUserData({
-        nom: '',
-        prénom: '',
-        role: 0,
+        name: '',
         email: '',
-        password: '',
-        confirmPassword: '',
-        laboratoire_id: '',
-        equipe_id: ''
+        password: 0,
       });
     } catch (error) {
       console.error('Error adding user:', error);
-      setError('حدث خطأ أثناء إضافة المستخدم.');
+      setError("Une erreur s'est produite lors de l'ajout de l'utilisateur.");
     }
   };
 
   const editUser = async () => {
     try {
-      const { id, nom, prénom, role, email, laboratoire_id, equipe_id } = editUserData;
-      await axios.put(`/users/${id}`, { nom, prénom, role, email, laboratoire_id, equipe_id });
+      const { id, name, email } = editUserData;
+      await axios.put(`/users/${id}`, { name, email });
       fetchData();
       Swal.fire({
-        title: "تم",
-        text: "تم تحديث معلومات المستخدم بنجاح.",
+        title: "Ok",
+        text: "Les informations utilisateur ont été mises à jour avec succès.",
         icon: "success"
       }).then(() => {
         document.getElementById('closeEditModalBtn').click();
       });
     } catch (error) {
       console.error('Error updating user:', error);
-      setError('حدث خطأ أثناء تحديث معلومات المستخدم.');
+      setError("Une erreur s'est produite lors de la mise à jour des informations utilisateur.");
     }
   };
 
@@ -150,16 +104,16 @@ function Users() {
     if (!newPassword || !confirmNewPassword) {
       Swal.fire({
         icon: 'error',
-        title: 'خطأ',
-        text: 'يرجى إدخال كلمة مرور جديدة وتأكيد كلمة المرور!',
+        title: 'erreur',
+        text: 'Veuillez saisir un nouveau mot de passe et confirmer le mot de passe !',
       });
       return;
     }
     if (newPassword !== confirmNewPassword) {
       Swal.fire({
         icon: 'error',
-        title: 'خطأ',
-        text: 'كلمة المرور الجديدة وتأكيد كلمة المرور غير متطابقين!',
+        title: 'erreur',
+        text: 'Le nouveau mot de passe et la confirmation du mot de passe ne correspondent pas !',
       });
       return;
     }
@@ -167,42 +121,42 @@ function Users() {
       await axios.put(`/users/${id}/password`, { newPassword: newPassword });
       fetchData();
       Swal.fire({
-        title: "تم",
-        text: "تم تحديث كلمة المرور بنجاح.",
+        title: "Ok",
+        text: "Le mot de passe a été mis à jour avec succès.",
         icon: "success"
       }).then(() => {
         document.getElementById('closePasswordModalBtn').click();
       });
     } catch (error) {
       console.error('Error updating password:', error);
-      setError('حدث خطأ أثناء تحديث كلمة المرور.');
+      setError("Une erreur s'est produite lors de la mise à jour du mot de passe.");
     }
   };
 
   const deleteUser = async (id) => {
     try {
       const result = await Swal.fire({
-        title: "هل أنت متأكد؟",
-        text: "لن تتمكن من التراجع عن هذا!",
+        title: "Êtes-vous sûr ?",
+        text: "Vous ne pourrez pas annuler cette action !",
         icon: "warning",
         showCancelButton: true,
         confirmButtonColor: "#3085d6",
         cancelButtonColor: "#d33",
-        confirmButtonText: "نعم، احذفها!"
+        confirmButtonText: "Oui, supprimez-la !"
       });
 
       if (result.isConfirmed) {
         await axios.delete(`/users/${id}`);
         fetchData();
         Swal.fire({
-          title: "تم الحذف!",
-          text: "تم حذف المستخدم بنجاح.",
+          title: "Supprimé !",
+          text: "L'utilisateur a été supprimé avec succès.",
           icon: "success"
         });
       }
     } catch (error) {
       console.error('Error deleting user:', error);
-      setError('حدث خطأ أثناء حذف المستخدم.');
+      setError('Une erreur est survenue lors de la suppression de l\'utilisateur.');
     }
   };
 
@@ -218,6 +172,10 @@ function Users() {
     });
   };
 
+  useEffect(() => {
+    fetchData();
+  }, []);
+
   return (
     <div className="row font-arabic">
       <div className="col-12">
@@ -230,36 +188,28 @@ function Users() {
           style={{ padding: '3px 11px' }}
         >
           <i className="fa fa-plus" aria-hidden="true" style={{ marginRight: '5px' }}></i>
-          إضافة
+          Ajouter
         </button>
         <div className="card">
           <div className="card-header">
-            <h3 className="card-title font-arabic p-2" style={{ float: 'right', borderBottom: 'none',
-    paddingBottom: '0' }}>لائحة المستخدمين</h3>
+            <h3 className="card-title p-2">Liste des utilisateurs</h3>
 
           </div>
-
-
-
-
-
-
           <div className="card-body table-responsive p-0">
             <table className="table table-hover text-nowrap">
               <thead>
-                <tr style={{ textAlign: 'right' }}>
-                  <th>إجراءات</th>
-                  <th>الدور</th>
-                  <th>الفريق</th>
-                  <th>المختبر</th>
-                  <th>البريد الإلكتروني</th>
-                  <th>الإسم و النسب</th>
+                <tr>
+                  <th>Nom et Prénom</th>
+                  <th>Email</th>
+                  <th></th>
                 </tr>
               </thead>
               <tbody>
-                {users.filter(user => user.id === userInfo.id).map(user => (
-                  <tr key={user.id} style={{ textAlign: 'right' }}>
-                    <td style={{ background: 'cornsilk' }}>
+                {users.map(user => (
+                  <tr key={user.id}>
+                    <td>{user.name}</td>
+                    <td>{user.email}</td>
+                    <td>
                       <a
                         href="#"
                         style={{ color: '#ff0000b3', marginRight: '10px' }}
@@ -289,56 +239,7 @@ function Users() {
                         <i className="fa fa-key" aria-hidden="true"></i>
                       </a>
                     </td>
-                    <td style={{ color: getRoleLabel(user.role).color, background: 'cornsilk' }}>
-                    {getRoleLabel(user.role).label}
-                    </td>
-                    <td style={{ background: 'cornsilk' }}>{user.equipe.nom}</td>
-                    <td style={{ background: 'cornsilk' }}>{user.laboratoire.nom}</td>
-                    <td style={{ background: 'cornsilk' }}>{user.email}</td>
-                    <td style={{ background: 'cornsilk' }}>{user.nom} {user.prénom}</td>
-                  </tr>
-                ))}
-              </tbody>
-              <tbody>
-                {users.filter(user => user.id !== userInfo.id).map(user => (
-                  <tr key={user.id} style={{ textAlign: 'right' }}>
-                    <td>
-                      <a
-                        href="#"
-                        style={{ color: '#ff0000b3', marginRight: '10px' }}
-                        aria-label="Delete"
-                        onClick={() => deleteUser(user.id)}
-                      >
-                        <i className="fa fa-trash" aria-hidden="true"></i>
-                      </a>
-                      <a
-                        type='button'
-                        data-toggle="modal"
-                        data-target="#editModal"
-                        style={{ color: '#007bff', marginRight: '10px' }}
-                        aria-label="Edit"
-                        onClick={() => openEditModal(user)}
-                      >
-                        <i className="fa fa-edit" aria-hidden="true"></i>
-                      </a>
-                      <a
-                        href="#"
-                        style={{ color: '#28a745' }}
-                        aria-label="Change Password"
-                        onClick={() => openPasswordModal(user)}
-                        data-toggle="modal"
-                        data-target="#passwordModal"
-                      >
-                        <i className="fa fa-key" aria-hidden="true"></i>
-                      </a>
-                    </td>
-                    <td style={{ color: getRoleLabel(user.role).color }}>
-                    {getRoleLabel(user.role).label}
-                    </td>
-                    <td>{user.equipe.nom}</td>
-                    <td>{user.laboratoire.nom}</td>
-                    <td>{user.email}</td>
-                    <td>{user.nom} {user.prénom}</td>
+                    
                   </tr>
                 ))}
               </tbody>
@@ -357,90 +258,28 @@ function Users() {
       <div className="modal fade" id="exampleModal" tabIndex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div className="modal-dialog" role="document">
           <div className="modal-content">
-            <div className="modal-header" dir='rtl'>
-              <h5 className="modal-title font-arabic" id="exampleModalLabel">إضافة مستخدم جديد</h5>
+            <div className="modal-header">
+              <h5 className="modal-title font-arabic" id="exampleModalLabel">Ajouter</h5>
             
             </div>
             <div className="modal-body">
               <form>
                 <div className="form-group tex-right">
-                  <label htmlFor="prénom" style={{ float: 'right' }}>الإسم</label>
+                  <label htmlFor="name">Nom et Prénom</label>
                   <input
                     type="text"
                     className="form-control"
-                    id="prénom"
-                    name="prénom"
-                    value={newUserData.prénom}
+                    id="name"
+                    name="name"
+                    value={newUserData.name}
                     onChange={handleNewUserDataChange}
                     required
                   />
                 </div>
                 <div className="form-group tex-right">
-                  <label htmlFor="nom" style={{ float: 'right' }}>النسب</label>
+                  <label htmlFor="email">Email</label>
                   <input
                     type="text"
-                    className="form-control"
-                    id="nom"
-                    name="nom"
-                    value={newUserData.nom}
-                    onChange={handleNewUserDataChange}
-                    required
-                  />
-                </div>
-                <div className="form-group tex-right">
-                  <label htmlFor="laboratoire_id" style={{ float: 'right' }}>المختبر</label>
-                  <select
-                    className="form-control"
-                    id="laboratoire_id"
-                    name="laboratoire_id"
-                    value={newUserData.laboratoire_id}
-                    onChange={handleNewUserDataChange}
-                    required
-                  >
-                    <option value="" disabled>اختر المختبر</option>
-                    {LaboInfos.map(laboratoire => (
-        <option key={laboratoire.id} value={laboratoire.id}>{laboratoire.nom}</option>
-      ))}
-                    
-                  </select>
-                </div>
-                <div className="form-group tex-right">
-                  <label htmlFor="equipe_id" style={{ float: 'right' }}>الفريق</label>
-                  <select
-                    className="form-control"
-                    id="equipe_id"
-                    name="equipe_id"
-                    value={newUserData.equipe_id}
-                    onChange={handleNewUserDataChange}
-                    required
-                  >
-                    <option value="" disabled>اختر الفريق</option>
-                    {EquipesInfos.map(equipe => (
-        <option key={equipe.id} value={equipe.id}>{equipe.nom}</option>
-      ))}
-                  </select>
-                </div>
-                <div className="form-group tex-right">
-                  <label htmlFor="role" style={{ float: 'right' }}>الدور</label>
-                  <select
-                    className="form-control"
-                    id="role"
-                    name="role"
-                    value={newUserData.role}
-                    onChange={handleNewUserDataChange}
-                    required
-                  >
-                    <option value="" disabled>اختر الدور</option>
-                    <option value="0">مستخدم</option>
-                    <option value="1">مسؤول الفريق</option>
-                    <option value="2">مسؤول المختبر</option>
-                    <option value="3">مسؤول</option>
-                  </select>
-                </div>
-                <div className="form-group tex-right">
-                  <label htmlFor="email" style={{ float: 'right' }}>البريد الإلكتروني</label>
-                  <input
-                    type="email"
                     className="form-control"
                     id="email"
                     name="email"
@@ -450,7 +289,7 @@ function Users() {
                   />
                 </div>
                 <div className="form-group tex-right">
-                  <label htmlFor="password" style={{ float: 'right' }}>كلمة المرور</label>
+                  <label htmlFor="password">Mot de passe</label>
                   <input
                     type="password"
                     className="form-control"
@@ -462,7 +301,7 @@ function Users() {
                   />
                 </div>
                 <div className="form-group tex-right">
-                  <label htmlFor="confirmPassword" style={{ float: 'right' }}>تأكيد كلمة المرور</label>
+                  <label htmlFor="confirmPassword">Confirmation Mot de passe</label>
                   <input
                     type="password"
                     className="form-control"
@@ -476,9 +315,8 @@ function Users() {
               </form>
             </div>
             <div className="modal-footer">
-              <button type="button" className="btn btn-secondary" style={{borderRadius: '0',
-    padding: '3px 16px'}} data-dismiss="modal" id="closeModalBtn">إلغاء</button>
-              <button type="button" className="btn btn-primary" onClick={addUser}>إضافة</button>
+              <button type="button" className="btn btn-secondary" data-dismiss="modal" id="closeModalBtn">Annuler</button>
+              <button type="button" className="btn btn-primary" onClick={addUser}>Ajouter</button>
             </div>
           </div>
         </div>
@@ -488,84 +326,26 @@ function Users() {
       <div className="modal fade" id="editModal" tabIndex="-1" role="dialog" aria-labelledby="editModalLabel" aria-hidden="true">
         <div className="modal-dialog" role="document">
           <div className="modal-content">
-            <div className="modal-header"  dir='rtl'>
-              <h5 className="modal-title" id="editModalLabel">تعديل معلومات المستخدم</h5>
+            <div className="modal-header">
+              <h5 className="modal-title" id="editModalLabel">Modifier</h5>
             </div>
             <div className="modal-body">
               {editUserData && (
                 <form>
-                  <div className="form-group tex-right">
-                  <label htmlFor="editprénom" style={{ float: 'right' }}>الإسم</label>
+                  <div className="form-group">
+                  <label htmlFor="editname">Nom et Prénom</label>
                   <input
                     type="text"
                     className="form-control"
-                    id="editprénom"
-                    name="prénom"
-                    value={editUserData.prénom}
+                    id="editname"
+                    name="name"
+                    value={editUserData.name}
                     onChange={handleEditUserDataChange}
                     required
                   />
                 </div>
-                <div className="form-group tex-right">
-                  <label htmlFor="editnom" style={{ float: 'right' }}>النسب</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    id="editnom"
-                    name="nom"
-                    value={editUserData.nom}
-                    onChange={handleEditUserDataChange}
-                    required
-                  />
-                </div>
-                  <div className="form-group tex-right">
-                  <label htmlFor="editlaboratoire_id" style={{ float: 'right' }}>المختبر</label>
-                  <select
-                    className="form-control"
-                    id="editlaboratoire_id"
-                    name="laboratoire_id"
-                    value={editUserData.laboratoire_id}
-                    onChange={handleEditUserDataChange}
-                    required
-                  >
-                    {LaboInfos.map(laboratoire => (
-        <option key={laboratoire.id} value={laboratoire.id}>{laboratoire.nom}</option>
-      ))}
-                  </select>
-                </div>
-                <div className="form-group tex-right">
-                  <label htmlFor="editequipe_id" style={{ float: 'right' }}>الفريق</label>
-                  <select
-                    className="form-control"
-                    id="editequipe_id"
-                    name="equipe_id"
-                    value={editUserData.equipe_id}
-                    onChange={handleEditUserDataChange}
-                    required
-                  >
-                    {EquipesInfos.map(equipe => (
-        <option key={equipe.id} value={equipe.id}>{equipe.nom}</option>
-      ))}
-                  </select>
-                </div>
-                <div className="form-group tex-right">
-                  <label htmlFor="editrole" style={{ float: 'right' }}>الدور</label>
-                  <select
-                    className="form-control"
-                    id="editrole"
-                    name="role"
-                    value={editUserData.role}
-                    onChange={handleEditUserDataChange}
-                    required
-                  >
-                    <option value="0">مستخدم</option>
-                    <option value="1">مسؤول الفريق</option>
-                    <option value="2">مسؤول المختبر</option>
-                    <option value="3">مسؤول</option>
-                  </select>
-                </div>
-                  <div className="form-group tex-right">
-                    <label htmlFor="editEmail" style={{ float: 'right' }}>البريد الإلكتروني</label>
+                  <div className="form-group">
+                    <label htmlFor="editEmail">Email</label>
                     <input
                       type="email"
                       className="form-control"
@@ -580,9 +360,8 @@ function Users() {
               )}
             </div>
             <div className="modal-footer">
-              <button type="button" className="btn btn-secondary" style={{borderRadius: '0',
-    padding: '3px 16px'}} data-dismiss="modal" id="closeEditModalBtn">إلغاء</button>
-              <button type="button" className="btn btn-primary" onClick={editUser}>تحديث</button>
+              <button type="button" className="btn btn-secondary" data-dismiss="modal" id="closeEditModalBtn">Annuler</button>
+              <button type="button" className="btn btn-primary" onClick={editUser}>Modifier</button>
             </div>
           </div>
         </div>
@@ -592,14 +371,14 @@ function Users() {
       <div className="modal fade" id="passwordModal" tabIndex="-1" role="dialog" aria-labelledby="passwordModalLabel" aria-hidden="true">
         <div className="modal-dialog" role="document">
           <div className="modal-content">
-            <div className="modal-header" dir='rtl'>
-              <h5 className="modal-title" id="passwordModalLabel">تغيير كلمة المرور</h5>
+            <div className="modal-header">
+              <h5 className="modal-title" id="passwordModalLabel">Modifier</h5>
 
             </div>
             <div className="modal-body">
               <form>
                 <div className="form-group">
-                  <label htmlFor="newPassword" style={{ float: 'right' }}>كلمة المرور الجديدة</label>
+                  <label htmlFor="newPassword">Nouveau mot de passe</label>
                   <input
                     type="password"
                     className="form-control"
@@ -611,7 +390,7 @@ function Users() {
                   />
                 </div>
                 <div className="form-group">
-                  <label htmlFor="confirmNewPassword" style={{ float: 'right' }}>تأكيد كلمة المرور الجديدة</label>
+                  <label htmlFor="confirmNewPassword">Confirmation de mot de passe</label>
                   <input
                     type="password"
                     className="form-control"
@@ -626,8 +405,8 @@ function Users() {
             </div>
             <div className="modal-footer">
               <button type="button" className="btn btn-secondary" style={{borderRadius: '0',
-    padding: '3px 16px'}} data-dismiss="modal" id="closePasswordModalBtn">إلغاء</button>
-              <button type="button" className="btn btn-primary" onClick={editPassword}>تغيير</button>
+    padding: '3px 16px'}} data-dismiss="modal" id="closePasswordModalBtn">Annuler</button>
+              <button type="button" className="btn btn-primary" onClick={editPassword}>modifier</button>
             </div>
           </div>
         </div>

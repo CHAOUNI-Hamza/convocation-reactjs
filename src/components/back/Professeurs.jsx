@@ -3,11 +3,13 @@ import axios from 'axios';
 import Swal from 'sweetalert2';
 import * as XLSX from 'xlsx';
 import '../../css/global.css';
-
 function Professeurs() {
   const [datas, setDatas] = useState([]);
   const [error, setError] = useState(null);
   const [selectedExams, setSelectedExams] = useState([]);
+  const [editData, setEditData] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [newData, setNewData] = useState({
     sum_number: '',
     name: '',
@@ -16,34 +18,26 @@ function Professeurs() {
     first_name_ar: '',
     email: '',
   });
-  const [editData, setEditData] = useState(null);
-
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-
   const fetchData = async (page = 1) => {
     try {
       const response = await axios.get(`/teachers?page=${page}`);
       setDatas(response.data.data);
       setCurrentPage(page);
-      setTotalPages(response.data.meta.last_page); // Assurez-vous que votre API retourne `meta.last_page`
+      setTotalPages(response.data.meta.last_page); 
     } catch (error) {
-      console.error("Error fetching data:", error);
+      console.error("Erreur lors de la récupération des données :", error);
       setError("Une erreur s'est produite lors du chargement des données.");
     }
   };
-
   const openShowModal = async (professeur) => {
     try {
-      const response = await axios.get(`/professeurs/${professeur.id}/exams`);
-      setSelectedExams(response.data); // Stocke les examens dans l'état
+      const response = await axios.get(`/professeurs/${professeur}/exams`);
+      setSelectedExams(response.data);
     } catch (error) {
       console.error("Erreur lors du chargement des examens :", error);
-      setSelectedExams([]); // Vide l'état en cas d'erreur
+      setSelectedExams([]);
     }
   };
-  
-
   const fetchAllDataForExcel = async () => {
     try {
       // Ici vous faites une requête pour récupérer toutes les données sans pagination
@@ -54,22 +48,14 @@ function Professeurs() {
       setError("Une erreur s'est produite lors du chargement des données.");
     }
   };
-
-  
-  useEffect(() => {
-    fetchData();
-    fetchAllDataForExcel();
-  }, []); // Ajout d'un tableau de dépendances vide pour exécuter fetchData une seule fois au montage  
   const handleNewDataChange = (e) => {
     const { name, value } = e.target;
     setNewData((newData) => ({ ...newData, [name]: value }));
   };
-
   const handleEditDataChange = (e) => {
     const { name, value } = e.target;
     setEditData((editData) => ({ ...editData, [name]: value }));
   };
-
   const validateForm = ({ sum_number, name, first_name, name_ar, first_name_ar, email }) => {
     if (!sum_number || !name || !first_name || !name_ar || !first_name_ar || !email) {
       Swal.fire({
@@ -79,7 +65,6 @@ function Professeurs() {
       });
       return false;
     }
-  
     const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
     if (!emailRegex.test(email)) {
       Swal.fire({
@@ -89,11 +74,8 @@ function Professeurs() {
       });
       return false;
     }
-    
     return true;
   };
-  
-
   const addData = async () => {
     if (!validateForm(newData)) return;
     try {
@@ -118,8 +100,6 @@ function Professeurs() {
       handleApiError(error, "Une erreur s'est produite lors de l'ajout.");
     }
   };
-  
-
   const updateData = async () => {
     if (!validateForm(editData)) return;
     try {
@@ -136,7 +116,6 @@ function Professeurs() {
       handleApiError(error, "Une erreur s'est produite lors de la mise à jour des informations.");
     }
   };
-  
   const deleteData = async (id) => {
     try {
       const result = await Swal.fire({
@@ -163,20 +142,14 @@ function Professeurs() {
       setError('حدث خطأ أثناء الحذف .');
     }
   };
-
   const openEditModal = (professeur) => {
     setEditData(professeur);
   };
-
-  const clearFilters = () => {
-    fetchData();
-  };
-
   const handleApiError = (error, defaultMessage) => {
     if (error.response && error.response.data.errorDate) {
       Swal.fire({
         icon: 'error',
-        title: 'خطأ',
+        title: 'erreur',
         text: error.response.data.errorDate,
       });
     } else {
@@ -184,32 +157,28 @@ function Professeurs() {
       setError(defaultMessage);
     }
   };
-
   const convertToExcel = (data) => {
   const ws = XLSX.utils.json_to_sheet(data.map(professeur => ({
-    'Som': professeur.sum_number,
-    'Nom': professeur.name,
-    'Prénom': professeur.first_name,
-    'Nom Ar': professeur.name_ar,
-    'Prénom Ar': professeur.first_name_ar,
-    'Email': professeur.email,
+    'sum_number': professeur.sum_number,
+    'name': professeur.name,
+    'first_name': professeur.first_name,
+    'name_ar': professeur.name_ar,
+    'first_name_ar': professeur.first_name_ar,
+    'email': professeur.email,
   })));
-
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Professeurs');
-
-  return wb;
-};
-
-const downloadExcel = async () => {
-  const allData = await fetchAllDataForExcel();  // Récupérer toutes les données pour l'export
-  const wb = convertToExcel(allData);  // Convertir ces données en Excel
-  XLSX.writeFile(wb, 'professeurs.xlsx');  // Télécharger le fichier Excel
-};
-
-
-  
-
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Professeurs');
+    return wb;
+  };
+  const downloadExcel = async () => {
+    const allData = await fetchAllDataForExcel();  // Récupérer toutes les données pour l'export
+    const wb = convertToExcel(allData);  // Convertir ces données en Excel
+    XLSX.writeFile(wb, 'professeurs.xlsx');  // Télécharger le fichier Excel
+  };
+  useEffect(() => {
+    fetchData();
+    fetchAllDataForExcel();
+  }, []); 
   return (
     <div className="row font-arabic">
       <div className="col-12">
@@ -229,19 +198,16 @@ const downloadExcel = async () => {
           <h3 className="card-title font-arabic p-2" style={{ borderBottom: 'none',
     paddingBottom: '0' }}> Liste des professeurs</h3>
           <button
-  type="button"
-  className="btn btn-success"
-  onClick={downloadExcel}
-  aria-label="تحميل"
->
-  <svg xmlns="http://www.w3.org/2000/svg" width="16" style={{ marginRight: '5px' }} height="16" fill="currentColor" className="bi bi-file-earmark-spreadsheet" viewBox="0 0 16 16">
-  <path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2M9.5 3A1.5 1.5 0 0 0 11 4.5h2V9H3V2a1 1 0 0 1 1-1h5.5zM3 12v-2h2v2zm0 1h2v2H4a1 1 0 0 1-1-1zm3 2v-2h3v2zm4 0v-2h3v1a1 1 0 0 1-1 1zm3-3h-3v-2h3zm-7 0v-2h3v2z"/>
-</svg>
-Télécharger
-</button>
-          
-          
-            
+            type="button"
+            className="btn btn-success"
+            onClick={downloadExcel}
+            aria-label="تحميل"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" style={{ marginRight: '5px' }} height="16" fill="currentColor" className="bi bi-file-earmark-spreadsheet" viewBox="0 0 16 16">
+            <path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2M9.5 3A1.5 1.5 0 0 0 11 4.5h2V9H3V2a1 1 0 0 1 1-1h5.5zM3 12v-2h2v2zm0 1h2v2H4a1 1 0 0 1-1-1zm3 2v-2h3v2zm4 0v-2h3v1a1 1 0 0 1-1 1zm3-3h-3v-2h3zm-7 0v-2h3v2z"/>
+          </svg>
+          Télécharger
+          </button>
     <div className="card-tools" style={{ marginRight: '10rem' }}>
           </div>
           <div className="filter-group">
@@ -294,7 +260,7 @@ Télécharger
                         data-target="#showModal"
                         style={{ color: '#007bff', marginRight: '10px' }}
                         aria-label="Show"
-                        onClick={() => openShowModal(data)}
+                        onClick={() => openShowModal(data.id)}
                       >
                         <i class="fa fa-eye" aria-hidden="true"></i>
                       </a>
@@ -302,15 +268,6 @@ Télécharger
                   </tr>
                 ))}
               </tbody>
-
-
-
-
-
-
-
-
-
               <div className="pagination p-2 ml-3">
   <p
     className="text-white bg-primary p-2" style={{ cursor: 'pointer' }}
@@ -319,11 +276,9 @@ Télécharger
   >
     Précédent
   </p>
-
   <span className="p-2" style={{ margin: "0 10px" }}>
     Page {currentPage} sur {totalPages}
   </span>
-
   <p
     className="text-white bg-primary p-2" style={{ cursor: 'pointer' }}
     disabled={currentPage === totalPages}
@@ -332,7 +287,6 @@ Télécharger
     Suivant
   </p>
 </div>
-
             </table>
             {error && (
               <div className="alert alert-danger" role="alert">
@@ -342,7 +296,6 @@ Télécharger
           </div>
         </div>
       </div>
-
       {/* Add User Modal */}
       <div className="modal fade" id="exampleModal" tabIndex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div className="modal-dialog" role="document">
@@ -387,7 +340,6 @@ Télécharger
           </div>
         </div>
       </div>
-
       {/* Edit User Modal */}
       {/* Edit User Modal */}
 {editData && ( 
@@ -435,52 +387,47 @@ Télécharger
     </div>
   </div>
 )}
-
 <div className="modal fade" id="showModal" tabIndex="-1" role="dialog" aria-labelledby="showModalLabel" aria-hidden="true">
   <div className="modal-dialog modal-lg" role="document">
     <div className="modal-content">
       <div className="modal-header">
-        <h5 className="modal-title font-arabic" id="showModalLabel">Examens du professeur</h5>
+      <h5 className="modal-title font-arabic" id="showModalLabel">{ selectedExams.first_name } { selectedExams.name }</h5>
       </div>
       <div className="modal-body">
-        {selectedExams.length > 0 ? (
-          <table className="table">
-            <thead>
-              <tr>
-                <th>Module</th>
-                <th>Semestre</th>
-                <th>Date</th>
-                <th>Créneau Horaire</th>
-                <th>Groupe</th>
-              </tr>
-            </thead>
-            <tbody>
-              {selectedExams.map((exam) => (
-                <tr key={exam.id}>
-                  <td>{exam.module}</td>
-                  <td>{exam.semestre}</td>
-                  <td>{exam.date}</td>
-                  <td>{exam.creneau_horaire}</td>
-                  <td>{exam.groupe}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        ) : (
-          <p>Aucun examen trouvé pour ce professeur.</p>
-        )}
-      </div>
+        {selectedExams?.exams?.length > 0 ? (
+    <table className="table">
+      <thead>
+        <tr>
+          <th>Module</th>
+          <th>Semestre</th>
+          <th>Date</th>
+          <th>Créneau Horaire</th>
+          <th>Groupe</th>
+        </tr>
+      </thead>
+      <tbody>
+        {selectedExams.exams.map((exam) => (
+          <tr key={exam.id}>
+            <td>{exam.module}</td>
+            <td>{exam.semestre}</td>
+            <td>{exam.date}</td>
+            <td>{exam.creneau_horaire.slice(0, 5)}</td>
+            <td>{exam.groupe}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  ) : (
+    <p>Aucun examen trouvé pour ce professeur.</p>
+  )}
+        </div>
       <div className="modal-footer">
         <button type="button" className="btn btn-secondary" data-dismiss="modal">Fermer</button>
       </div>
     </div>
   </div>
 </div>
-
-
-
     </div>
   );
 }
-
 export default Professeurs;

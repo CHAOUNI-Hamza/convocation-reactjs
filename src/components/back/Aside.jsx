@@ -18,7 +18,7 @@ function Aside({ setActiveComponent, activeComponent }) {
           <div className="info">
           {userInfo ? (
               <a type='button' className="d-block text-white">
-                {userInfo.nom} {userInfo.prénom}
+                {userInfo.name}
               </a>
             ) : (
               <a type='button' className="d-block text-white">
@@ -71,16 +71,6 @@ function Aside({ setActiveComponent, activeComponent }) {
                   >
                     <i className="far fa-circle nav-icon"></i>
                     <p>Examens</p>
-                  </a>
-                </li>
-                <li className="nav-item">
-                  <a
-                    type='button'
-                    className={`nav-link ${activeComponent === "Sessions" ? "active" : ""}`}
-                    onClick={() => setActiveComponent("Sessions")}
-                  >
-                    <i className="far fa-circle nav-icon"></i>
-                    <p>Sessions</p>
                   </a>
                 </li>
               </ul>
