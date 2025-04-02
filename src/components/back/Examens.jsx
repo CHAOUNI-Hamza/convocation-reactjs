@@ -214,6 +214,7 @@ function Examens() {
     'salle': exam.salle,
     'lib_mod': exam.lib_mod,
     'filiere': exam.filiere,
+    'professeurs': exam.teachers.map(t => `${t.name} ${t.first_name}`).join(', ')
   })));
   const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'exams');
@@ -233,7 +234,8 @@ function Examens() {
     fetchData(); setDate(''); setModule(''); setSalle(''); setFiliere(''); setSemestre(''); setGroupe('');
   };
   return (
-    <div className="row font-arabic">
+    <div className="row">
+      {datas.length > 0 ? (
       <div className="col-12">
         <button
           type="button"
@@ -247,9 +249,9 @@ function Examens() {
           Ajouter
         </button>
         <div className="card">
-          <div className="card-header" style={{ textAlign: 'right' }}>
-          <h3 className="card-title font-arabic p-2" style={{ borderBottom: 'none',
-    paddingBottom: '0' }}> Liste des examens</h3>
+          <div className="card-header p-3" style={{ textAlign: 'right' }}>
+          <h3 className="card-title p-2" style={{ borderBottom: 'none',
+    paddingBottom: '0',fontSize: 'x-large' }}> Liste des examens</h3>
           <button
   type="button"
   className="btn btn-success"
@@ -281,103 +283,110 @@ Télécharger
       </div>
     </div>
           </div>
-          <div className="card-body table-responsive p-0">
-            <table className="table table-hover text-nowrap">
-              <thead>
-                <tr>
-                  <th>Date</th>
-                  <th>Créneau horaire</th>
-                  <th>Module</th>
-                  <th>Salle</th>
-                  <th>Filière</th>
-                  <th>Semestre</th>
-                  <th>Groupe</th>
-                  <th>Libellé module</th>
-                  <th>Professeurs</th>
-                </tr>
-              </thead>
-              <tbody>
-                {datas.map(data => (
-                  <tr key={data.id}>
-                    <td>{data.date}</td>
-                    <td>{data.creneau_horaire.slice(0, 5)}</td>
-                    <td>{data.module}</td>
-                    <td>{data.salle}</td>
-                    <td>{data.filiere}</td>
-                    <td>{data.semestre}</td>
-                    <td>{data.groupe}</td>
-                    <td>{data.lib_mod}</td>
-                    <td>
-        {data.teachers && data.teachers.length > 0
-          ? data.teachers.map((teacher, index) => (
-              <React.Fragment key={index}>
-                  <span>{teacher.name}</span>
-                  <span class="ml-2 badge badge-primary">
-                  {teacher.total_exams}
-                  </span>
-                  <a
-                  onClick={() => openShowModal(teacher.id)}
-                  data-toggle="modal"
-                  data-target="#showModal"
-                  ><i class="ml-2 fa fa-eye text-success" aria-hidden="true"></i></a>
-                <br />
-              </React.Fragment>
-            ))
-          : 'Aucun'}
-      </td>
-                    <td>
-                      {/*<a
-                        href="#"
-                        style={{ color: '#ff0000b3', marginRight: '10px' }}
-                        aria-label="Delete"
-                        onClick={() => deleteData(data.id)}
-                      >
-                        <i className="fa fa-trash" aria-hidden="true"></i>
-                      </a>*/}
-                      <a
-                        type='button'
-                        data-toggle="modal"
-                        data-target="#editModal"
-                        style={{ color: '#007bff', marginRight: '10px' }}
-                        aria-label="Edit"
-                        onClick={() => openEditModal(data)}
-                      >
-                        <i className="fa fa-edit" aria-hidden="true"></i>
-                      </a>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-              <div className="pagination p-2 ml-3">
-              <p
-                className="text-white bg-primary p-2" style={{ cursor: 'pointer' }}
-                disabled={currentPage === 1}
-                onClick={() => fetchData(currentPage - 1)}
-              >
-                Précédent
-              </p>
+          
+  <div className="card-body table-responsive p-0">
+  <table className="table table-hover text-nowrap">
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Créneau horaire</th>
+        <th>Module</th>
+        <th>Salle</th>
+        <th>Filière</th>
+        <th>Semestre</th>
+        <th>Groupe</th>
+        <th>Libellé module</th>
+        <th>Professeurs</th>
+      </tr>
+    </thead>
+    <tbody>
+      {datas.map(data => (
+        <tr key={data.id}>
+          <td>{data.date}</td>
+          <td>{data.creneau_horaire.slice(0, 5)}</td>
+          <td>{data.module}</td>
+          <td>{data.salle}</td>
+          <td>{data.filiere}</td>
+          <td>{data.semestre}</td>
+          <td>{data.groupe}</td>
+          <td>{data.lib_mod}</td>
+          <td>
+{data.teachers && data.teachers.length > 0
+? data.teachers.map((teacher, index) => (
+    <React.Fragment key={index}>
+        <span>{teacher.name}</span>
+        <span className="ml-2 badge badge-primary">
+        {teacher.total_exams}
+        </span>
+        <a
+        onClick={() => openShowModal(teacher.id)}
+        data-toggle="modal"
+        data-target="#showModal"
+        style={{ cursor: 'pointer' }}
+        ><i className="ml-2 fa fa-eye text-success" aria-hidden="true"></i></a>
+      <br />
+    </React.Fragment>
+  ))
+: 'Aucun'}
+</td>
+          <td>
+            {/*<a
+              href="#"
+              style={{ color: '#ff0000b3', marginRight: '10px' }}
+              aria-label="Delete"
+              onClick={() => deleteData(data.id)}
+            >
+              <i className="fa fa-trash" aria-hidden="true"></i>
+            </a>*/}
+            <a
+              type='button'
+              data-toggle="modal"
+              data-target="#editModal"
+              style={{ color: '#007bff', marginRight: '10px' }}
+              aria-label="Edit"
+              onClick={() => openEditModal(data)}
+            >
+              <i className="fa fa-edit" aria-hidden="true"></i>
+            </a>
+          </td>
+        </tr>
+      ))}
+    </tbody>
+    <div className="pagination p-2 ml-3">
+    <p
+      className="text-white bg-primary p-2" style={{ cursor: 'pointer' }}
+      disabled={currentPage === 1}
+      onClick={() => fetchData(currentPage - 1)}
+    >
+      Précédent
+    </p>
 
-              <span className="p-2" style={{ margin: "0 10px" }}>
-                Page {currentPage} sur {totalPages}
-              </span>
+    <span className="p-2" style={{ margin: "0 10px" }}>
+      Page {currentPage} sur {totalPages}
+    </span>
 
-              <p
-                className="text-white bg-primary p-2" style={{ cursor: 'pointer' }}
-                disabled={currentPage === totalPages}
-                onClick={() => fetchData(currentPage + 1)}
-              >
-                Suivant
-              </p>
-            </div>
-            </table>
-            {error && (
-              <div className="alert alert-danger" role="alert">
-                {error}
-              </div>
-            )}
-          </div>
+    <p
+      className="text-white bg-primary p-2" style={{ cursor: 'pointer' }}
+      disabled={currentPage === totalPages}
+      onClick={() => fetchData(currentPage + 1)}
+    >
+      Suivant
+    </p>
+  </div>
+  </table>
+  {error && (
+    <div className="alert alert-danger" role="alert">
+      {error}
+    </div>
+  )}
+</div>
+
+          
         </div>
       </div>
+      ) : (
+        <p>Aucune donnée disponible.</p> // Message à afficher si datas est vide
+      )}
       {/* Add User Modal */}
       <div className="modal fade" id="exampleModal" tabIndex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div className="modal-dialog" role="document">

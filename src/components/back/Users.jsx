@@ -1,13 +1,14 @@
 import React, { useContext, useState, useEffect } from 'react';
 import axios from 'axios';
 import Swal from 'sweetalert2';
-import '../../css/users.css';
 import { UserContext } from '../../UserContext';
 
 function Users() {
   const { userInfo } = useContext(UserContext);
   const [users, setUsers] = useState([]);
   const [error, setError] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [newUserData, setNewUserData] = useState({
     name: '',
     email: '',
@@ -20,11 +21,13 @@ function Users() {
     confirmNewPassword: ''
   });
 
-  const fetchData = async () => {
+  const fetchData = async (page = 1) => {
     setError(null);
     try {
-      const response = await axios.get('/users');
+      const response = await axios.get(`/users?page=${page}`);
       setUsers(response.data.data);
+      setCurrentPage(page);
+      setTotalPages(response.data.meta.last_page);
     } catch (error) {
       console.error('Erreur lors de la récupération des données :', error);
     }
@@ -192,7 +195,8 @@ function Users() {
         </button>
         <div className="card">
           <div className="card-header">
-            <h3 className="card-title p-2">Liste des utilisateurs</h3>
+            <h3 className="card-title p-2" style={{ borderBottom: 'none',
+    paddingBottom: '0',fontSize: 'x-large' }}>Liste des utilisateurs</h3>
 
           </div>
           <div className="card-body table-responsive p-0">
@@ -243,6 +247,25 @@ function Users() {
                   </tr>
                 ))}
               </tbody>
+              <div className="pagination p-2 ml-3">
+  <p
+    className="text-white bg-primary p-2" style={{ cursor: 'pointer' }}
+    disabled={currentPage === 1}
+    onClick={() => fetchData(currentPage - 1)}
+  >
+    Précédent
+  </p>
+  <span className="p-2" style={{ margin: "0 10px" }}>
+    Page {currentPage} sur {totalPages}
+  </span>
+  <p
+    className="text-white bg-primary p-2" style={{ cursor: 'pointer' }}
+    disabled={currentPage === totalPages}
+    onClick={() => fetchData(currentPage + 1)}
+  >
+    Suivant
+  </p>
+</div>
             </table>
             {error && (
               <div className="alert alert-danger" role="alert">

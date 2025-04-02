@@ -2,8 +2,9 @@ import React, { useEffect } from "react";
 import axios from "axios";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import LoginView from "./views/front/LoginView";
+import HomeView from "./views/front/HomeView";
 import "./App.css";
-import TokenExpiryHandler from "./TokenExpiryHandler"; // Import the TokenExpiryHandler component
+import TokenExpiryHandler from "./TokenExpiryHandler"; 
 import DashboardWiew from "./views/back/DashboardWiew";
 
 import PrivateRouteAdmin from "./PrivateRouteAdmin";
@@ -24,6 +25,7 @@ axios.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
 
 export default function App() {
   useEffect(() => {
@@ -47,6 +49,7 @@ export default function App() {
         <TokenExpiryHandler>
           <Routes>
             ()
+            {/*<Route path="/" element={<HomeView />} />*/}
             <Route path="/login" element={<LoginView />} />
             <Route element={<PrivateRouteAdmin />}>
               <Route

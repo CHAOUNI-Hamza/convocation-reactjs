@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import '../../css/login.css';
 import cover from '../../assets/cover.jpg';
 import axios from 'axios';
+import { useNavigate } from "react-router-dom";
 
 export default function HomeView() {
   const [email, setEmail] = useState('');
@@ -9,6 +10,7 @@ export default function HomeView() {
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const [authError, setAuthError] = useState('');
+  const navigate = useNavigate();
 
   const validateEmail = (email) => {
     const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -50,6 +52,8 @@ export default function HomeView() {
         
         localStorage.setItem('accessToken', access_token);
         localStorage.setItem('tokenExpiry', tokenExpiry);
+
+        navigate('/admin');
   
       } catch (error) {
         console.error('Erreur :', error);
@@ -115,7 +119,7 @@ export default function HomeView() {
                   <div className="form-group d-md-flex">
                     <div className="text-left">
                       <label className="checkbox-primary mb-0 fw-bold">
-                        Plateforme MAQALAT - FLSHM Mohammedia
+                      Plateforme CONVOCATION - FLSHM Mohammedia
                       </label>
                     </div>
                   </div>

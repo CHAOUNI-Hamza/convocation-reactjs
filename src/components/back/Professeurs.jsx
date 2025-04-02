@@ -196,7 +196,7 @@ function Professeurs() {
         <div className="card">
           <div className="card-header" style={{ textAlign: 'right' }}>
           <h3 className="card-title font-arabic p-2" style={{ borderBottom: 'none',
-    paddingBottom: '0' }}> Liste des professeurs</h3>
+    paddingBottom: '0',fontSize: 'x-large' }}> Liste des professeurs</h3>
           <button
             type="button"
             className="btn btn-success"
