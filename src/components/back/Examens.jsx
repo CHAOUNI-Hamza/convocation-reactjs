@@ -28,6 +28,7 @@ function Examens() {
           semestre: '',
           groupe: '',
           lib_mod: '',
+          prof_mod: '',
           teacher_ids: [],
   });
   const fetchData = async (page = 1) => {
@@ -102,8 +103,8 @@ function Examens() {
     const { name, value } = e.target;
     setEditData((editData) => ({ ...editData, [name]: value }));
   };
-  const validateForm = ({ date, creneau_horaire, module, salle, filiere, semestre, groupe , lib_mod, teacher_ids}) => {
-    if (!date || !creneau_horaire || !module || !salle || !filiere || !semestre || !groupe || !lib_mod || !teacher_ids) {
+  const validateForm = ({ date, creneau_horaire, module, salle, filiere, semestre, groupe , lib_mod, prof_mod, teacher_ids}) => {
+    if (!date || !creneau_horaire || !module || !salle || !filiere || !semestre || !groupe || !lib_mod || !prof_mod || !teacher_ids) {
       Swal.fire({
         icon: 'error',
         title: 'Erreur',
@@ -214,6 +215,7 @@ function Examens() {
     'salle': exam.salle,
     'lib_mod': exam.lib_mod,
     'filiere': exam.filiere,
+    'prof_mod': exam.prof_mod,
     'professeurs': exam.teachers.map(t => `${t.name} ${t.first_name}`).join(', ')
   })));
   const wb = XLSX.utils.book_new();
@@ -296,6 +298,7 @@ Télécharger
         <th>Semestre</th>
         <th>Groupe</th>
         <th>Libellé module</th>
+        <th>Prof de module</th>
         <th>Professeurs</th>
       </tr>
     </thead>
@@ -310,6 +313,7 @@ Télécharger
           <td>{data.semestre}</td>
           <td>{data.groupe}</td>
           <td>{data.lib_mod}</td>
+          <td>{data.prof_mod}</td>
           <td>
 {data.teachers && data.teachers.length > 0
 ? data.teachers.map((teacher, index) => (
@@ -443,6 +447,10 @@ Télécharger
     <input type="text" className="form-control" id="lib_mod" name="lib_mod" value={newData.lib_mod} onChange={handleNewDataChange} required />
   </div>
   <div className="form-group">
+    <label htmlFor="prof_mod">Prof du Module</label>
+    <input type="text" className="form-control" id="prof_mod" name="prof_mod" value={newData.prof_mod} onChange={handleNewDataChange} required />
+  </div>
+  <div className="form-group">
   <label htmlFor="teacher_ids">Professeurs</label>
   <select
     className="form-control"
@@ -506,8 +514,12 @@ Télécharger
                 {editData.available_teachers && editData.available_teachers.map((teacher) => (
                   <option key={teacher.id} value={teacher.id}>
                     {teacher.name}
-                    &nbsp;&nbsp;
+                    &nbsp;&nbsp;-&nbsp;&nbsp;
                   {teacher.total_exams}
+                  &nbsp;&nbsp;-&nbsp;&nbsp;
+                  {teacher.city}
+                  &nbsp;&nbsp;-&nbsp;&nbsp;
+                  {teacher.limit}
                   </option>
     ))}
   </select>
@@ -576,6 +588,10 @@ Télécharger
         <label htmlFor="lib_mod">Libellé du Module</label>
         <input type="text" className="form-control" id="lib_mod" name="lib_mod" value={editData.lib_mod} onChange={handleEditDataChange} required />
       </div>
+      <div className="form-group">
+    <label htmlFor="prof_mod">Prof du Module</label>
+    <input type="text" className="form-control" id="prof_mod" name="prof_mod" value={editData.prof_mod} onChange={handleEditDataChange} required />
+  </div>
       </>
               )}
     </form>
