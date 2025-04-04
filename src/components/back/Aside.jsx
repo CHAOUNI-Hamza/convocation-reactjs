@@ -7,13 +7,13 @@ function Aside({ setActiveComponent, activeComponent }) {
   return (
     <aside className="main-sidebar sidebar-dark-primary elevation-4">
       <a type='button' className="brand-link" style={{ textAlign: 'center' }}>
-        <span className="brand-text font-weight-light text-white">FLSHM</span>
+        <span className="brand-text font-weight-light text-white">Planning professeurs</span>
       </a>
 
       <div className="sidebar">
         <div className="user-panel mt-3 pb-3 mb-3 d-flex">
           <div className="image">
-            <img src="https://cdn-icons-png.flaticon.com/512/9187/9187604.png" className="img-circle elevation-2" alt="User Image" />
+            <img src="https://cdn-icons-png.flaticon.com/512/219/219983.png" className="img-circle elevation-2" alt="User Image" />
           </div>
           <div className="info">
           {userInfo ? (

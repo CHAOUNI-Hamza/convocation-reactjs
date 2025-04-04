@@ -17,6 +17,9 @@ function Professeurs() {
     name_ar: '',
     first_name_ar: '',
     email: '',
+    city: '',
+    status: '',
+    limit: '',
   });
   const fetchData = async (page = 1) => {
     try {
@@ -56,8 +59,8 @@ function Professeurs() {
     const { name, value } = e.target;
     setEditData((editData) => ({ ...editData, [name]: value }));
   };
-  const validateForm = ({ sum_number, name, first_name, name_ar, first_name_ar, email }) => {
-    if (!sum_number || !name || !first_name || !name_ar || !first_name_ar || !email) {
+  const validateForm = ({ sum_number, name, first_name, name_ar, first_name_ar, email, city, status, limit }) => {
+    if (!sum_number || !name || !first_name || !name_ar || !first_name_ar || !email || !city || !status || !limit) {
       Swal.fire({
         icon: 'error',
         title: 'Erreur',
@@ -93,6 +96,9 @@ function Professeurs() {
           name_ar: '',
           first_name_ar: '',
           email: '',
+          city: '',
+          status: '',
+          limit: '',
         });        
         fetchData();
       });
@@ -165,6 +171,9 @@ function Professeurs() {
     'name_ar': professeur.name_ar,
     'first_name_ar': professeur.first_name_ar,
     'email': professeur.email,
+    'ville': professeur.city,
+    'status': professeur.status,
+    'limite': professeur.limit,
   })));
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Professeurs');
@@ -223,6 +232,9 @@ function Professeurs() {
                   <th>Nom Ar</th>
                   <th>Prénom Ar</th>
                   <th>Email</th>
+                  <th>Ville</th>
+                  <th>Status</th>
+                  <th>Limite</th>
                   <th></th>
                 </tr>
               </thead>
@@ -235,6 +247,9 @@ function Professeurs() {
                     <td>{data.name_ar}</td>
                     <td>{data.first_name_ar}</td>
                     <td>{data.email}</td>
+                    <td>{data.city}</td>
+                    <td>{data.status}</td>
+                    <td>{data.limit}</td>
                     <td>
                       <a
                         href="#"
@@ -262,7 +277,7 @@ function Professeurs() {
                         aria-label="Show"
                         onClick={() => openShowModal(data.id)}
                       >
-                        <i class="fa fa-eye" aria-hidden="true"></i>
+                        <i className="fa fa-eye" aria-hidden="true"></i>
                       </a>
                     </td>
                   </tr>
@@ -329,6 +344,22 @@ function Professeurs() {
                   <label htmlFor="email">Email</label>
                   <input type="text" className="form-control" id="email" name="email" value={newData.email} onChange={handleNewDataChange} required />
                 </div>
+                <div className="form-group">
+                  <label htmlFor="city">Ville</label>
+                  <input type="text" className="form-control" id="city" name="city" value={newData.city} onChange={handleNewDataChange} required />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="status">Status</label>
+                  <select className="form-control" id="status" name="status" value={newData.status} onChange={handleNewDataChange} required>
+                    <option>Choisissez votre statut</option>
+                    <option value="active">Active</option>
+                    <option value="non">Non</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label htmlFor="limit">Limite</label>
+                  <input type="number" className="form-control" id="limit" name="limit" value={newData.limit} onChange={handleNewDataChange} required />
+                </div>
               </form>
             </div>
             <div className="modal-footer">
@@ -374,6 +405,22 @@ function Professeurs() {
                 <div className="form-group">
                   <label htmlFor="email">Email</label>
                   <input type="text" className="form-control" id="email" name="email" value={editData.email} onChange={handleEditDataChange} required />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="city">Ville</label>
+                  <input type="text" className="form-control" id="city" name="city" value={editData.city} onChange={handleEditDataChange} required />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="status">Status</label>
+                  <select className="form-control" id="status" name="status" value={editData.status} onChange={handleEditDataChange} required>
+                  <option>Choisissez votre statut</option>
+                    <option value="active">Active</option>
+                    <option value="non">Non</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label htmlFor="limit">Limite</label>
+                  <input type="number" className="form-control" id="limit" name="limit" value={editData.limit} onChange={handleEditDataChange} required />
                 </div>
           </form>
         </div>
