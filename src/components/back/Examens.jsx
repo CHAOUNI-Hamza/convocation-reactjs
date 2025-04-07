@@ -12,6 +12,12 @@ function Examens() {
   const [teachers, setTeachers] = useState([]);
   const [selectedExams, setSelectedExams] = useState([{ exams: [] }]);
   const [editData, setEditData] = useState(null);
+  const [date, setDate] = useState('');
+    const [module, setModule] = useState('');
+    const [salle, setSalle] = useState('');
+    const [filiere, setFiliere] = useState('');
+    const [semestre, setSemestre] = useState('');
+    const [groupe, setGroupe] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [newData, setNewData] = useState({
@@ -46,7 +52,16 @@ function Examens() {
   };
   const fetchData = async (page = 1) => {
     try {
-      const response = await axios.get('/exams');
+      const params = {
+        page,
+        date,
+        module,
+        salle,
+        filiere,
+        semestre,
+        groupe,
+      };
+      const response = await axios.get('/exams', { params });
       const examens = response.data.data;
       setDatas(examens);
       setCurrentPage(page);
@@ -211,6 +226,10 @@ function Examens() {
     fetchTeachers();
   }, []);
 
+  const clearFilters = () => {
+    fetchData(); setDate(''); setModule(''); setSalle(''); setFiliere(''); setSemestre(''); setGroupe('');
+  };
+
   return (
     <div className="row">
       {datas.length > 0 ? (
@@ -229,6 +248,25 @@ function Examens() {
 </svg>
 Télécharger
 </button>
+<div className="card-tools" style={{ marginRight: '10rem' }}>
+      <div className="filter-group">
+        <div className='form-group d-flex'>
+          <input type="date" className='form-control mr-2' value={date} onChange={(e) => setDate(e.target.value)} placeholder="Filtrer par date"/>
+          <input type="text" className='form-control mr-2' value={module} onChange={(e) => setModule(e.target.value)} placeholder="Filtrer par module"
+          />
+          <input type="text" className='form-control mr-2' value={salle} onChange={(e) => setSalle(e.target.value)} placeholder="Filtrer par salle"
+          />
+          <input type="text" className='form-control mr-2' value={filiere} onChange={(e) => setFiliere(e.target.value)} placeholder="Filtrer par filière"
+          />
+          <input type="text" className='form-control mr-2' value={semestre} onChange={(e) => setSemestre(e.target.value)} placeholder="Filtrer par semestre"
+          />
+          <input type="text" className='form-control mr-2' value={groupe} onChange={(e) => setGroupe(e.target.value)} placeholder="Filtrer par groupe"
+          />
+          <button className='btn btn-primary mr-2' onClick={() => fetchData(1)}>Filtrer</button>
+          <button className='btn btn-danger' onClick={clearFilters}>Réinitialiser</button>
+        </div>
+      </div>
+    </div>
           </div>
           
   <div className="card-body table-responsive p-0">
