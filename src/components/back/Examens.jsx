@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import * as XLSX from 'xlsx';
 import Swal from 'sweetalert2';
 import '../../css/global.css';
 
@@ -8,8 +9,23 @@ function Examens() {
   const [professeursCache, setProfesseursCache] = useState({}); // Cache pour les professeurs
   const [error, setError] = useState(null);
   const [showInputs, setShowInputs] = useState(false);
+  const [teachers, setTeachers] = useState([]);
   const [selectedExams, setSelectedExams] = useState([{ exams: [] }]);
   const [editData, setEditData] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [newData, setNewData] = useState({
+           date: '',
+            creneau_horaire: '',
+            module: '',
+            salle: '',
+            filiere: '',
+            semestre: '',
+            groupe: '',
+            lib_mod: '',
+            prof_mod: '',
+            teacher_ids: [],
+    });
 
   const fetchProfesseursDisponibles = async (date, creneau_horaire) => {
     const key = `${date}-${creneau_horaire}`; // Générer une clé unique pour chaque combinaison date + créneau
@@ -32,18 +48,29 @@ function Examens() {
     try {
       const response = await axios.get('/exams');
       const examens = response.data.data;
-      const updatedExamens = await Promise.all(
+      setDatas(examens);
+      setCurrentPage(page);
+      setTotalPages(response.data.meta.last_page);
+      /*const updatedExamens = await Promise.all(
         examens.map(async (exam) => {
           const profs = await fetchProfesseursDisponibles(exam.date, exam.creneau_horaire);
           return { ...exam, available_teachers: profs };
         })
       );
-      setDatas(updatedExamens);
+      setDatas(updatedExamens);*/
     } catch (error) {
       console.error("Erreur lors de la récupération des données :", error);
       setError("Une erreur s'est produite lors du chargement des données.");
     }
   };
+  const fetchTeachers = async () => {
+      try {
+        const response = await axios.get('/teachers/all'); 
+        setTeachers(response.data.data);
+      } catch (error) {
+        console.error("Erreur lors de la récupération des enseignants", error);
+      }
+    };
   const openShowModal = async (professeur) => {
     try {
       const response = await axios.get(`/professeurs/${professeur}/exams`);
@@ -52,6 +79,10 @@ function Examens() {
       console.error("Erreur lors du chargement des examens :", error);
       setSelectedExams([]);
     }
+  };
+  const handleNewDataChange = (e) => {
+    const { name, value } = e.target;
+    setNewData((newData) => ({ ...newData, [name]: value }));
   };
   const handleEditDataChange = (e) => {
     const { name, value } = e.target;
@@ -68,6 +99,37 @@ function Examens() {
     }
     return true;
   };
+  const addData = async () => {
+      if (!validateForm(newData)) return;
+      try {
+        const payload = {
+          ...newData,
+          teacher_ids: Array.isArray(newData.teacher_ids) ? newData.teacher_ids : [newData.teacher_ids],
+        };
+        await axios.post('/exams', payload);
+        Swal.fire({
+          title: "Ok",
+          text: "Ajouté avec succès.",
+          icon: "success"
+        }).then(() => {
+          document.getElementById('closeModalBtn').click();
+          setNewData({
+            date: '',
+            creneau_horaire: '',
+            module: '',
+            salle: '',
+            filiere: '',
+            semestre: '',
+            groupe: '',
+            lib_mod: '',
+            teacher_ids: [],
+          });        
+          fetchData();
+        });
+      } catch (error) {
+        handleApiError(error, "Une erreur s'est produite lors de l'ajout.");
+      }
+    };
 
   const updateData = async () => {
     if (!validateForm(editData)) return;
@@ -89,8 +151,12 @@ function Examens() {
     }
   };
 
-  const openEditModal = (professeur) => {
-    setEditData(professeur);
+  const openEditModal = async (exam) => {
+    //setEditData(professeur);
+    setEditData(null); // Réinitialiser avant de recharger
+
+  const available_teachers = await fetchProfesseursDisponibles(exam.date, exam.creneau_horaire);
+  setEditData({ ...exam, available_teachers });
   };
   const handleApiError = (error, defaultMessage) => {
     if (error.response && error.response.data.errorDate) {
@@ -105,8 +171,44 @@ function Examens() {
     }
   };
 
+  const fetchAllDataForExcel = async () => {
+      try {
+        const response = await axios.get('/exams/all');
+        return response.data.data;
+      } catch (error) {
+        console.error("Erreur lors de la récupération de toutes les données :", error);
+        setError("Une erreur s'est produite lors du chargement des données.");
+      }
+    };
+
+    const convertToExcel = (data) => {
+      const ws = XLSX.utils.json_to_sheet(data.map(exam => ({
+        'module': exam.module,
+        'semestre': exam.semestre,
+        'date': exam.date,
+        'creneau_horaire': exam.creneau_horaire,
+        'groupe': exam.groupe,
+        'salle': exam.salle,
+        'lib_mod': exam.lib_mod,
+        'filiere': exam.filiere,
+        'prof_mod': exam.prof_mod,
+        'professeurs': exam.teachers.map(t => `${t.name} ${t.first_name}`).join(', ')
+      })));
+      const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'exams');
+        return wb;
+      };
+
+  const downloadExcel = async () => {
+      const allData = await fetchAllDataForExcel();  // Récupérer toutes les données pour l'export
+      const wb = convertToExcel(allData);  // Convertir ces données en Excel
+      XLSX.writeFile(wb, 'exams.xlsx');  // Télécharger le fichier Excel
+    };
+
   useEffect(() => {
     fetchData();
+    fetchAllDataForExcel();
+    fetchTeachers();
   }, []);
 
   return (
@@ -116,6 +218,17 @@ function Examens() {
         <div className="card">
           <div className="card-header p-3" style={{ textAlign: 'right' }}>
           <h3 className="card-title p-2" style={{ borderBottom: 'none', paddingBottom: '0', fontSize: 'x-large' }}> Liste des examens</h3>
+          <button
+  type="button"
+  className="btn btn-success mr-2"
+  onClick={downloadExcel}
+  aria-label="تحميل"
+>
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" style={{ marginRight: '5px' }} height="16" fill="currentColor" className="bi bi-file-earmark-spreadsheet" viewBox="0 0 16 16">
+  <path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2M9.5 3A1.5 1.5 0 0 0 11 4.5h2V9H3V2a1 1 0 0 1 1-1h5.5zM3 12v-2h2v2zm0 1h2v2H4a1 1 0 0 1-1-1zm3 2v-2h3v2zm4 0v-2h3v1a1 1 0 0 1-1 1zm3-3h-3v-2h3zm-7 0v-2h3v2z"/>
+</svg>
+Télécharger
+</button>
           </div>
           
   <div className="card-body table-responsive p-0">
@@ -124,6 +237,13 @@ function Examens() {
       <tr>
         <th>Date</th>
         <th>Créneau horaire</th>
+        <th>Module</th>
+        <th>Salle</th>
+        <th>Filière</th>
+        <th>Semestre</th>
+        <th>Groupe</th>
+        <th>Libellé module</th>
+        <th>Prof de module</th>
         <th>Professeurs</th>
       </tr>
     </thead>
@@ -132,6 +252,13 @@ function Examens() {
         <tr key={data.id}>
           <td>{data.date}</td>
           <td>{data.creneau_horaire.slice(0, 5)}</td>
+          <td>{data.module}</td>
+          <td>{data.salle}</td>
+          <td>{data.filiere}</td>
+          <td>{data.semestre}</td>
+          <td>{data.groupe}</td>
+          <td>{data.lib_mod}</td>
+          <td>{data.prof_mod}</td>
           <td>
             {data.teachers && data.teachers.length > 0
             ? data.teachers.map((teacher, index) => (
@@ -166,6 +293,27 @@ function Examens() {
         </tr>
       ))}
     </tbody>
+    <div className="pagination p-2 ml-3">
+    <p
+      className="text-white bg-primary p-2" style={{ cursor: 'pointer' }}
+      disabled={currentPage === 1}
+      onClick={() => fetchData(currentPage - 1)}
+    >
+      Précédent
+    </p>
+
+    <span className="p-2" style={{ margin: "0 10px" }}>
+      Page {currentPage} sur {totalPages}
+    </span>
+
+    <p
+      className="text-white bg-primary p-2" style={{ cursor: 'pointer' }}
+      disabled={currentPage === totalPages}
+      onClick={() => fetchData(currentPage + 1)}
+    >
+      Suivant
+    </p>
+  </div>
   </table>
   {error && (
     <div className="alert alert-danger" role="alert">
@@ -178,6 +326,100 @@ function Examens() {
       ) : (
         <p>Aucune donnée disponible.</p>
       )}
+      {/* Add User Modal */}
+      <div className="modal fade" id="exampleModal" tabIndex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div className="modal-dialog" role="document">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h5 className="modal-title font-arabic" id="exampleModalLabel">Ajouter</h5>
+            </div>
+            <div className="modal-body">
+            <form>
+  <div className="form-group">
+    <label htmlFor="date">Date</label>
+    <input type="date" className="form-control" id="date" name="date" value={newData.date} onChange={handleNewDataChange} required />
+  </div>
+  <div className="form-group">
+  <label htmlFor="creneau_horaire">Créneau horaire</label>
+  <select
+    className="form-control"
+    id="creneau_horaire"
+    name="creneau_horaire"
+    value={newData.creneau_horaire}
+    onChange={handleNewDataChange}
+    required
+  >
+    <option value="09:00">09:00</option>
+    <option value="11:30">11:30</option>
+    <option value="14:00">14:00</option>
+    <option value="14:30">14:30</option>
+    <option value="16:30">16:30</option>
+    <option value="17:00">17:00</option>
+  </select>
+</div>
+  <div className="form-group">
+    <label htmlFor="module">Module</label>
+    <input type="text" className="form-control" id="module" name="module" value={newData.module} onChange={handleNewDataChange} required />
+  </div>
+  <div className="form-group">
+    <label htmlFor="salle">Salle</label>
+    <input type="text" className="form-control" id="salle" name="salle" value={newData.salle} onChange={handleNewDataChange} required />
+  </div>
+  <div className="form-group">
+    <label htmlFor="filiere">Filière</label>
+    <input type="text" className="form-control" id="filiere" name="filiere" value={newData.filiere} onChange={handleNewDataChange} required />
+  </div>
+  <div className="form-group">
+    <label htmlFor="semestre">Semestre</label>
+    <input type="text" className="form-control" id="semestre" name="semestre" value={newData.semestre} onChange={handleNewDataChange} required />
+  </div>
+  <div className="form-group">
+    <label htmlFor="groupe">Groupe</label>
+    <input type="text" className="form-control" id="groupe" name="groupe" value={newData.groupe} onChange={handleNewDataChange} required />
+  </div>
+  <div className="form-group">
+    <label htmlFor="lib_mod">Libellé du Module</label>
+    <input type="text" className="form-control" id="lib_mod" name="lib_mod" value={newData.lib_mod} onChange={handleNewDataChange} required />
+  </div>
+  <div className="form-group">
+    <label htmlFor="prof_mod">Prof du Module</label>
+    <input type="text" className="form-control" id="prof_mod" name="prof_mod" value={newData.prof_mod} onChange={handleNewDataChange} required />
+  </div>
+  <div className="form-group">
+  <label htmlFor="teacher_ids">Professeurs</label>
+  <select
+    className="form-control"
+    id="teacher_ids"
+    name="teacher_ids"
+    multiple
+    value={newData.teacher_ids || []}
+    onChange={(e) =>
+      setNewData({ ...newData, teacher_ids: [...e.target.selectedOptions].map(o => o.value) })
+    }
+    required
+    size="5"
+  >
+    <option value="" className='text-red'>-- Aucun professeur --</option>
+    {teachers.map((teacher) => (
+      <option key={teacher.id} value={teacher.id}>
+        {teacher.name}
+        &nbsp;&nbsp;
+                  {teacher.total_exams}
+      </option>
+    ))}
+  </select>
+</div>
+</form>
+            </div>
+            <div className="modal-footer">
+              <button type="button" style={{borderRadius: '0',
+    padding: '3px 16px'}} className="btn btn-secondary" id="closeModalBtn" data-dismiss="modal">Annuler</button>
+              <button type="button" style={{borderRadius: '0',
+    padding: '3px 16px'}} className="btn btn-primary" onClick={addData}>Ajouter</button>
+            </div>
+          </div>
+        </div>
+      </div>
       {/* Edit User Modal */}
       {editData && ( 
         <div className="modal fade" id="editModal" tabIndex="-1" role="dialog" aria-labelledby="editModalLabel" aria-hidden="true">
