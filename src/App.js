@@ -2,7 +2,7 @@ import React, { useEffect } from "react";
 import axios from "axios";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import LoginView from "./views/front/LoginView";
-import HomeView from "./views/front/HomeView";
+//import HomeView from "./views/front/HomeView";
 import "./App.css";
 import TokenExpiryHandler from "./TokenExpiryHandler"; 
 import DashboardWiew from "./views/back/DashboardWiew";

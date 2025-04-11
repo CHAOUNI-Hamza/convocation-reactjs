@@ -2,7 +2,7 @@ import React, { useContext } from 'react';
 import { UserContext } from '../../UserContext';
 
 function Aside({ setActiveComponent, activeComponent }) {
-  const { userInfo } = useContext(UserContext);
+  const { userInfo, loading } = useContext(UserContext);
 
   return (
     <aside className="main-sidebar sidebar-dark-primary elevation-4">
@@ -16,14 +16,12 @@ function Aside({ setActiveComponent, activeComponent }) {
             <img src="https://cdn-icons-png.flaticon.com/512/219/219983.png" className="img-circle elevation-2" alt="User Image" />
           </div>
           <div className="info">
-          {userInfo ? (
-              <a type='button' className="d-block text-white">
-                {userInfo.name}
-              </a>
+            {loading ? (
+              <a type='button' className="d-block text-white">Admin</a>
+            ) : userInfo ? (
+              <a type='button' className="d-block text-white">{userInfo.name}</a>
             ) : (
-              <a type='button' className="d-block text-white">
-                Loading...
-              </a>
+              <a type='button' className="d-block text-white">Utilisateur non connecté</a>
             )}
           </div>
         </div>

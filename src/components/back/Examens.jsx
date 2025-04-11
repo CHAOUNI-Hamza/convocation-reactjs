@@ -34,22 +34,45 @@ function Examens() {
     });
 
   const fetchProfesseursDisponibles = async (date, creneau_horaire) => {
-    const key = `${date}-${creneau_horaire}`; // Générer une clé unique pour chaque combinaison date + créneau
-    if (professeursCache[key]) {
-      return professeursCache[key]; // Si déjà en cache, retourner les données
-    }
     try {
       const response = await axios.get('/professeurs-disponibles', {
         params: { date, creneau_horaire }
       });
       const professeurs = response.data.data;
-      setProfesseursCache((prevCache) => ({ ...prevCache, [key]: professeurs })); // Mettre à jour le cache
-      return professeurs;
+      return professeurs; // Retourner les professeurs sans utiliser le cache
     } catch (error) {
       console.error("Erreur lors de la récupération des enseignants", error);
       return [];
     }
   };
+
+  const assignProfModulesRandomly = async () => {
+    try {
+      const response = await axios.get('/assign-prof-module');
+      fetchData();
+      Swal.fire({
+        icon: 'success',
+        title: 'Ok',
+        text: response.data.message,
+      });
+    } catch (error) {
+      console.error("Erreur lors de la récupération", error);
+    }
+  };
+  const removeProfAssignments = async () => {
+    try {
+      const response = await axios.get('/remove-prof-assignments');
+      fetchData();
+      Swal.fire({
+        icon: 'success',
+        title: 'Ok',
+        text: response.data.message,
+      });
+    } catch (error) {
+      console.error("Erreur lors de la récupération des enseignants", error);
+    }
+  };
+  
   const fetchData = async (page = 1) => {
     try {
       const params = {
@@ -166,13 +189,31 @@ function Examens() {
     }
   };
 
-  const openEditModal = async (exam) => {
+  /*const openEditModal = async (exam) => {
     //setEditData(professeur);
     setEditData(null); // Réinitialiser avant de recharger
 
   const available_teachers = await fetchProfesseursDisponibles(exam.date, exam.creneau_horaire);
   setEditData({ ...exam, available_teachers });
+  };*/
+  const openEditModal = async (exam) => {
+    setEditData(null); // Reset
+    const available_teachers = await fetchProfesseursDisponibles(exam.date, exam.creneau_horaire);
+    setEditData({ ...exam, available_teachers });
+  
+    // Afficher manuellement la modale après que les données soient prêtes
+    setTimeout(() => {
+      window.$('#editModal').modal('show'); // nécessite jQuery
+    }, 100); // délai court pour s'assurer que setEditData est terminé
   };
+  /*const openEditModal = async (exam) => {
+    setEditData(null); // Réinitialiser avant de recharger
+  
+    // Toujours appeler l'API même si les mêmes données sont sélectionnées
+    const available_teachers = await fetchProfesseursDisponibles(exam.date, exam.creneau_horaire);
+    setEditData({ ...exam, available_teachers });
+  };*/
+  
   const handleApiError = (error, defaultMessage) => {
     if (error.response && error.response.data.errorDate) {
       Swal.fire({
@@ -234,6 +275,17 @@ function Examens() {
     <div className="row">
       {datas.length > 0 ? (
       <div className="col-12">
+        <button
+          type="button"
+          data-toggle="modal"
+          data-target="#exampleModal"
+          className="btn btn-success btn-flat mb-3"
+          aria-label="إضافة"
+          style={{ padding: '3px 11px' }}
+        >
+          <i className="fa fa-plus" aria-hidden="true" style={{ marginRight: '5px' }}></i>
+          Ajouter
+        </button>
         <div className="card">
           <div className="card-header p-3" style={{ textAlign: 'right' }}>
           <h3 className="card-title p-2" style={{ borderBottom: 'none', paddingBottom: '0', fontSize: 'x-large' }}> Liste des examens</h3>
@@ -247,6 +299,28 @@ function Examens() {
   <path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2M9.5 3A1.5 1.5 0 0 0 11 4.5h2V9H3V2a1 1 0 0 1 1-1h5.5zM3 12v-2h2v2zm0 1h2v2H4a1 1 0 0 1-1-1zm3 2v-2h3v2zm4 0v-2h3v1a1 1 0 0 1-1 1zm3-3h-3v-2h3zm-7 0v-2h3v2z"/>
 </svg>
 Télécharger
+</button>
+<button
+  type="button"
+  className="btn btn-primary mr-2"
+  onClick={assignProfModulesRandomly}
+  aria-label="تحميل"
+>
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" style={{ marginRight: '5px' }} height="16" fill="currentColor" className="bi bi-file-earmark-spreadsheet" viewBox="0 0 16 16">
+  <path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2M9.5 3A1.5 1.5 0 0 0 11 4.5h2V9H3V2a1 1 0 0 1 1-1h5.5zM3 12v-2h2v2zm0 1h2v2H4a1 1 0 0 1-1-1zm3 2v-2h3v2zm4 0v-2h3v1a1 1 0 0 1-1 1zm3-3h-3v-2h3zm-7 0v-2h3v2z"/>
+</svg>
+Affectation des professeurs
+</button>
+<button
+  type="button"
+  className="btn btn-danger mr-2"
+  onClick={removeProfAssignments}
+  aria-label="تحميل"
+>
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" style={{ marginRight: '5px' }} height="16" fill="currentColor" className="bi bi-file-earmark-spreadsheet" viewBox="0 0 16 16">
+  <path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2M9.5 3A1.5 1.5 0 0 0 11 4.5h2V9H3V2a1 1 0 0 1 1-1h5.5zM3 12v-2h2v2zm0 1h2v2H4a1 1 0 0 1-1-1zm3 2v-2h3v2zm4 0v-2h3v1a1 1 0 0 1-1 1zm3-3h-3v-2h3zm-7 0v-2h3v2z"/>
+</svg>
+Supprimer l'affectation
 </button>
 <div className="card-tools" style={{ marginRight: '10rem' }}>
       <div className="filter-group">
@@ -301,7 +375,7 @@ Télécharger
             {data.teachers && data.teachers.length > 0
             ? data.teachers.map((teacher, index) => (
                 <React.Fragment key={index}>
-                  <span>{teacher.name}</span>
+                  <span>{teacher.name} {teacher.first_name}</span>
                   <span className="ml-2 badge badge-primary">
                   {teacher.total_exams}
                   </span>
@@ -319,8 +393,8 @@ Télécharger
           <td>
             <a
               type='button'
-              data-toggle="modal"
-              data-target="#editModal"
+              //data-toggle="modal"
+              //data-target="#editModal"
               style={{ color: '#007bff', marginRight: '10px' }}
               aria-label="Edit"
               onClick={() => openEditModal(data)}
@@ -387,6 +461,7 @@ Télécharger
     onChange={handleNewDataChange}
     required
   >
+    <option value="">Choisissez votre créneau horaire</option>
     <option value="09:00">09:00</option>
     <option value="11:30">11:30</option>
     <option value="14:00">14:00</option>
@@ -437,12 +512,24 @@ Télécharger
     required
     size="5"
   >
-    <option value="" className='text-red'>-- Aucun professeur --</option>
+    <option style={{ paddingBottom: "5px" }} value="" className='text-red'>-- Aucun professeur --</option>
     {teachers.map((teacher) => (
-      <option key={teacher.id} value={teacher.id}>
-        {teacher.name}
-        &nbsp;&nbsp;
-                  {teacher.total_exams}
+      <option style={{ borderBottom: "1px solid #0000001a",
+        paddingBottom: "5px",
+        paddingTop: "5px" }} key={teacher.id} value={teacher.id}>
+        <option key={teacher.id} value={teacher.id}>
+                          {teacher.name} {teacher.first_name}
+                          &nbsp;&nbsp;|&nbsp;&nbsp;
+                          {teacher.total_exams}
+                          &nbsp;&nbsp;|&nbsp;&nbsp;
+                          {teacher.city}
+                          &nbsp;&nbsp;|&nbsp;&nbsp;
+                          {teacher.limit}
+                          &nbsp;&nbsp;|&nbsp;&nbsp;
+                          {teacher.grad}
+                          &nbsp;&nbsp;|&nbsp;&nbsp;
+                          {teacher.status === "active" ? "" : "Non"}
+                        </option>
       </option>
     ))}
   </select>
@@ -461,7 +548,7 @@ Télécharger
       {/* Edit User Modal */}
       {editData && ( 
         <div className="modal fade" id="editModal" tabIndex="-1" role="dialog" aria-labelledby="editModalLabel" aria-hidden="true">
-          <div className="modal-dialog" role="document">
+          <div className="modal-dialog modal-lg" role="document">
             <div className="modal-content">
               <div className="modal-header">
                 <h5 className="modal-title font-arabic" id="editModalLabel">  Modifier </h5>
@@ -482,16 +569,22 @@ Télécharger
                       required
                       size="20"
                     >
-                      <option value="" className='text-red'>-- Aucun professeur --</option>
+                      <option style={{paddingBottom: "5px" }} value="" className='text-red'>-- Aucun professeur --</option>
                       {editData.available_teachers && editData.available_teachers.map((teacher) => (
-                        <option key={teacher.id} value={teacher.id}>
-                          {teacher.name}
-                          &nbsp;&nbsp;-&nbsp;&nbsp;
+                        <option style={{ borderBottom: "1px solid #0000001a",
+                          paddingBottom: "5px",
+                          paddingTop: "5px" }} key={teacher.id} value={teacher.id}>
+                          {teacher.name} {teacher.first_name}
+                          &nbsp;&nbsp;|&nbsp;&nbsp;
                           {teacher.total_exams}
-                          &nbsp;&nbsp;-&nbsp;&nbsp;
+                          &nbsp;&nbsp;|&nbsp;&nbsp;
                           {teacher.city}
-                          &nbsp;&nbsp;-&nbsp;&nbsp;
+                          &nbsp;&nbsp;|&nbsp;&nbsp;
                           {teacher.limit}
+                          &nbsp;&nbsp;|&nbsp;&nbsp;
+                          {teacher.grad}
+                          &nbsp;&nbsp;|&nbsp;&nbsp;
+                          {teacher.status === "active" ? "" : "Non"}
                         </option>
                       ))}
                     </select>
@@ -504,6 +597,69 @@ Télécharger
                   >
                     {showInputs ? "Masquer les champs" : "Afficher les champs"}
                   </button>
+                  {showInputs && (
+                <>
+      <div className="form-group">
+        <label htmlFor="date">Date</label>
+        <input type="date" className="form-control" id="date" name="date" value={editData.date} onChange={handleEditDataChange} required />
+      </div>
+
+      <div className="form-group">
+        <label htmlFor="creneau_horaire">Créneau horaire</label>
+        <select
+          className="form-control"
+          id="creneau_horaire"
+          name="creneau_horaire"
+          value={editData.creneau_horaire}
+          onChange={handleEditDataChange}
+          required
+        >
+          <option value="">Choisissez votre créneau horaire</option>
+          <option value="09:00:00">09:00</option>
+          <option value="11:30:00">11:30</option>
+          <option value="14:00:00">14:00</option>
+          <option value="14:30:00">14:30</option>
+          <option value="16:30:00">16:30</option>
+          <option value="17:00:00">17:00</option>
+        </select>
+      </div>
+
+
+      <div className="form-group">
+        <label htmlFor="module">Module</label>
+        <input type="text" className="form-control" id="module" name="module" value={editData.module} onChange={handleEditDataChange} required />
+      </div>
+
+      <div className="form-group">
+        <label htmlFor="salle">Salle</label>
+        <input type="text" className="form-control" id="salle" name="salle" value={editData.salle} onChange={handleEditDataChange} required />
+      </div>
+
+      <div className="form-group">
+        <label htmlFor="filiere">Filière</label>
+        <input type="text" className="form-control" id="filiere" name="filiere" value={editData.filiere} onChange={handleEditDataChange} required />
+      </div>
+
+      <div className="form-group">
+        <label htmlFor="semestre">Semestre</label>
+        <input type="text" className="form-control" id="semestre" name="semestre" value={editData.semestre} onChange={handleEditDataChange} required />
+      </div>
+
+      <div className="form-group">
+        <label htmlFor="groupe">Groupe</label>
+        <input type="text" className="form-control" id="groupe" name="groupe" value={editData.groupe} onChange={handleEditDataChange} required />
+      </div>
+
+      <div className="form-group">
+        <label htmlFor="lib_mod">Libellé du Module</label>
+        <input type="text" className="form-control" id="lib_mod" name="lib_mod" value={editData.lib_mod} onChange={handleEditDataChange} required />
+      </div>
+      <div className="form-group">
+    <label htmlFor="prof_mod">Prof du Module</label>
+    <input type="text" className="form-control" id="prof_mod" name="prof_mod" value={editData.prof_mod} onChange={handleEditDataChange} required />
+  </div>
+      </>
+              )}
                 </form>
               </div>
               <div className="modal-footer">
@@ -514,6 +670,48 @@ Télécharger
           </div>
         </div>
       )}
+      <div className="modal fade" id="showModal" tabIndex="-1" role="dialog" aria-labelledby="showModalLabel" aria-hidden="true">
+  <div className="modal-dialog modal-lg" role="document">
+    <div className="modal-content">
+      <div className="modal-header">
+        <h5 className="modal-title font-arabic" id="showModalLabel">{ selectedExams.first_name } { selectedExams.name }</h5>
+      </div>
+      <div className="modal-body">
+      {selectedExams?.exams?.length > 0 ? (
+  <table className="table">
+    <thead>
+      <tr>
+      <th>Date</th>
+      <th>Créneau Horaire</th>
+        <th>Module</th>
+        <th>Semestre</th>
+        <th>Salle</th>
+        <th>Groupe</th>
+      </tr>
+    </thead>
+    <tbody>
+      {selectedExams.exams.map((exam) => (
+        <tr key={exam.id}>
+          <td>{exam.date}</td>
+          <td>{exam.creneau_horaire.slice(0, 5)}</td>
+          <td>{exam.module}</td>
+          <td>{exam.semestre}</td>
+          <td>{exam.salle}</td>
+          <td>{exam.groupe}</td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+) : (
+  <p>Aucun examen trouvé pour ce professeur.</p>
+)}
+      </div>
+      <div className="modal-footer">
+        <button type="button" className="btn btn-secondary" data-dismiss="modal">Fermer</button>
+      </div>
+    </div>
+  </div>
+</div>
     </div>
   );
 }

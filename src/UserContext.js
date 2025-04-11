@@ -6,6 +6,7 @@ export const UserContext = createContext();
 
 export const UserProvider = ({ children }) => {
   const [userInfo, setUserInfo] = useState(null);
+  const [loading, setLoading] = useState(true); // <- ajouté
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -25,6 +26,7 @@ export const UserProvider = ({ children }) => {
         } catch (error) {
           console.error("There was an error fetching user data!", error);
         }
+        setLoading(false);
       } else {
         //console.warn("No access token found in local storage.");
       }
@@ -34,7 +36,7 @@ export const UserProvider = ({ children }) => {
   }, []);
 
   return (
-    <UserContext.Provider value={{ userInfo, setUserInfo }}>
+    <UserContext.Provider value={{ userInfo, setUserInfo, loading }}>
       {children}
     </UserContext.Provider>
   );

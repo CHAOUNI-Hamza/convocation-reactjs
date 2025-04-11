@@ -20,6 +20,7 @@ function Professeurs() {
     city: '',
     status: '',
     limit: '',
+    grad: '',
   });
   const fetchData = async (page = 1) => {
     try {
@@ -59,8 +60,8 @@ function Professeurs() {
     const { name, value } = e.target;
     setEditData((editData) => ({ ...editData, [name]: value }));
   };
-  const validateForm = ({ sum_number, name, first_name, name_ar, first_name_ar, email, city, status, limit }) => {
-    if (!sum_number || !name || !first_name || !name_ar || !first_name_ar || !email || !city || !status || !limit) {
+  const validateForm = ({ sum_number, name, first_name, name_ar, first_name_ar, email, city, status, limit, grad }) => {
+    if (!sum_number || !name || !first_name || !name_ar || !first_name_ar || !email || !city || !status || !limit || !grad) {
       Swal.fire({
         icon: 'error',
         title: 'Erreur',
@@ -99,6 +100,7 @@ function Professeurs() {
           city: '',
           status: '',
           limit: '',
+          grad: '',
         });        
         fetchData();
       });
@@ -174,6 +176,7 @@ function Professeurs() {
     'ville': professeur.city,
     'status': professeur.status,
     'limite': professeur.limit,
+    'grad': professeur.grad,
   })));
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Professeurs');
@@ -229,12 +232,13 @@ function Professeurs() {
                   <th>Som</th>
                   <th>Nom</th>
                   <th>Prénom</th>
-                  <th>Nom Ar</th>
-                  <th>Prénom Ar</th>
+                  {/*<th>Nom Ar</th>
+                  <th>Prénom Ar</th>*/}
                   <th>Email</th>
                   <th>Ville</th>
                   <th>Status</th>
                   <th>Limite</th>
+                  <th>Grade</th>
                   <th></th>
                 </tr>
               </thead>
@@ -244,12 +248,13 @@ function Professeurs() {
                     <td>{data.sum_number}</td>
                     <td>{data.name}</td>
                     <td>{data.first_name}</td>
-                    <td>{data.name_ar}</td>
-                    <td>{data.first_name_ar}</td>
+                    {/*<td>{data.name_ar}</td>
+                    <td>{data.first_name_ar}</td>*/}
                     <td>{data.email}</td>
                     <td>{data.city}</td>
                     <td>{data.status}</td>
                     <td>{data.limit}</td>
+                    <td>{data.grad}</td>
                     <td>
                       <a
                         href="#"
@@ -360,6 +365,10 @@ function Professeurs() {
                   <label htmlFor="limit">Limite</label>
                   <input type="number" className="form-control" id="limit" name="limit" value={newData.limit} onChange={handleNewDataChange} required />
                 </div>
+                <div className="form-group">
+                  <label htmlFor="grad">Garde</label>
+                  <input type="text" className="form-control" id="grad" name="grad" value={newData.grad} onChange={handleNewDataChange} required />
+                </div>
               </form>
             </div>
             <div className="modal-footer">
@@ -421,6 +430,10 @@ function Professeurs() {
                 <div className="form-group">
                   <label htmlFor="limit">Limite</label>
                   <input type="number" className="form-control" id="limit" name="limit" value={editData.limit} onChange={handleEditDataChange} required />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="grad">Garde</label>
+                  <input type="text" className="form-control" id="grad" name="grad" value={editData.grad} onChange={handleEditDataChange} required />
                 </div>
           </form>
         </div>

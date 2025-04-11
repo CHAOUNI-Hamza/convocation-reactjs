@@ -76,7 +76,7 @@ function Users() {
       setNewUserData({
         name: '',
         email: '',
-        password: 0,
+        password: '',
       });
     } catch (error) {
       console.error('Error adding user:', error);
@@ -319,18 +319,6 @@ function Users() {
                     id="password"
                     name="password"
                     value={newUserData.password}
-                    onChange={handleNewUserDataChange}
-                    required
-                  />
-                </div>
-                <div className="form-group tex-right">
-                  <label htmlFor="confirmPassword">Confirmation Mot de passe</label>
-                  <input
-                    type="password"
-                    className="form-control"
-                    id="confirmPassword"
-                    name="confirmPassword"
-                    value={newUserData.confirmPassword}
                     onChange={handleNewUserDataChange}
                     required
                   />
