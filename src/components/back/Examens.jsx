@@ -4,6 +4,7 @@ import * as XLSX from 'xlsx';
 import Swal from 'sweetalert2';
 import '../../css/global.css';
 
+
 function Examens() {
   const [datas, setDatas] = useState([]);
   const [professeursCache, setProfesseursCache] = useState({}); // Cache pour les professeurs
@@ -32,6 +33,8 @@ function Examens() {
             prof_mod: '',
             teacher_ids: [],
     });
+
+    
 
   const fetchProfesseursDisponibles = async (date, creneau_horaire) => {
     try {
@@ -101,6 +104,7 @@ function Examens() {
       setError("Une erreur s'est produite lors du chargement des données.");
     }
   };
+  
   const fetchTeachers = async () => {
       try {
         const response = await axios.get('/teachers/all'); 
@@ -390,6 +394,7 @@ Supprimer l'affectation
               ))
             : 'Aucun'}
           </td>
+          
           <td>
             <a
               type='button'

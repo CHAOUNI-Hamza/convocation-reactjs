@@ -3,6 +3,12 @@ import axios from 'axios';
 import Swal from 'sweetalert2';
 import * as XLSX from 'xlsx';
 import '../../css/global.css';
+
+import { PDFDocument, rgb } from 'pdf-lib';
+import { saveAs } from 'file-saver';
+import arabicFont from '../../font/Amiri-Regular.ttf';
+import * as fontkit from 'fontkit';
+
 function Professeurs() {
   const [datas, setDatas] = useState([]);
   const [error, setError] = useState(null);
@@ -21,6 +27,10 @@ function Professeurs() {
     status: '',
     limit: '',
     grad: '',
+    cycle: '',
+    num_student: '',
+    year: '',
+    levels: '',
   });
   const fetchData = async (page = 1) => {
     try {
@@ -32,6 +42,43 @@ function Professeurs() {
       console.error("Erreur lors de la récupération des données :", error);
       setError("Une erreur s'est produite lors du chargement des données.");
     }
+  };
+  const generateArabicPDF = async (row) => {
+    const existingPdfBytes = await fetch('/modele.pdf').then(res => res.arrayBuffer());
+    const pdfDoc = await PDFDocument.load(existingPdfBytes);
+    pdfDoc.registerFontkit(fontkit);
+
+    const fontBytes = await fetch(arabicFont).then(res => res.arrayBuffer());
+    const customFont = await pdfDoc.embedFont(fontBytes);
+
+    const page = pdfDoc.getPages()[0];
+
+    // Exemple de coordonnées à adapter à ton modèle PDF
+    const drawText = (text, x, y) => {
+      page.drawText(text || '', {
+        x,
+        y,
+        size: 14,
+        font: customFont,
+        color: rgb(0, 0, 0),
+      });
+    };
+
+    drawText(String(row.total_exams * 2), 100, 160);
+    drawText(row.first_name_ar + "   " + row.name_ar, 470, 305);
+    drawText(row.levels, 520, 265);
+    drawText(row.num_student, 530, 230);
+    drawText(row.sum_number, 450, 195);
+    drawText(row.cycle, 330, 160);
+    drawText(row.year, 250, 160);
+    const today = new Date();
+    const formattedDate = today.toLocaleDateString('fr-FR');
+    drawText(formattedDate, 100, 105); // Positionner selon ton design
+
+
+    const pdfBytes = await pdfDoc.save();
+    const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+    saveAs(blob, `examen-${row.module}.pdf`);
   };
   const openShowModal = async (professeur) => {
     try {
@@ -60,8 +107,8 @@ function Professeurs() {
     const { name, value } = e.target;
     setEditData((editData) => ({ ...editData, [name]: value }));
   };
-  const validateForm = ({ sum_number, name, first_name, name_ar, first_name_ar, email, city, status, limit, grad }) => {
-    if (!sum_number || !name || !first_name || !name_ar || !first_name_ar || !email || !city || !status || !limit || !grad) {
+  const validateForm = ({ sum_number, name, first_name, name_ar, first_name_ar, email, city, status, limit, grad, cycle, num_student, year, levels }) => {
+    if (!sum_number || !name || !first_name || !name_ar || !first_name_ar || !email || !city || !status || !limit || !grad || !cycle || !num_student || !year || !levels) {
       Swal.fire({
         icon: 'error',
         title: 'Erreur',
@@ -101,6 +148,10 @@ function Professeurs() {
           status: '',
           limit: '',
           grad: '',
+          cycle: '',
+          num_student: '',
+          year: '',
+          levels: '',
         });        
         fetchData();
       });
@@ -284,7 +335,16 @@ function Professeurs() {
                       >
                         <i className="fa fa-eye" aria-hidden="true"></i>
                       </a>
+                      <a 
+                      type='button'
+                      style={{ color: '#ff8c00', marginRight: '10px' }}
+                      onClick={() => generateArabicPDF(data)}>
+                        <i class="fa fa-file" aria-hidden="true"></i>
+                      </a>
                     </td>
+                    <td>
+  
+              </td>
                   </tr>
                 ))}
               </tbody>
@@ -366,8 +426,24 @@ function Professeurs() {
                   <input type="number" className="form-control" id="limit" name="limit" value={newData.limit} onChange={handleNewDataChange} required />
                 </div>
                 <div className="form-group">
-                  <label htmlFor="grad">Garde</label>
+                  <label htmlFor="grad">Grade</label>
                   <input type="text" className="form-control" id="grad" name="grad" value={newData.grad} onChange={handleNewDataChange} required />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="cycle">Session</label>
+                  <input type="text" className="form-control" id="cycle" name="cycle" value={newData.cycle} onChange={handleNewDataChange} required />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="num_student">Numéro étudiant</label>
+                  <input type="text" className="form-control" id="num_student" name="num_student" value={newData.num_student} onChange={handleNewDataChange} required />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="year">Année</label>
+                  <input type="text" className="form-control" id="year" name="year" value={newData.year} onChange={handleNewDataChange} required />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="levels">Niveaux</label>
+                  <input type="text" className="form-control" id="levels" name="levels" value={newData.levels} onChange={handleNewDataChange} required />
                 </div>
               </form>
             </div>
@@ -432,8 +508,24 @@ function Professeurs() {
                   <input type="number" className="form-control" id="limit" name="limit" value={editData.limit} onChange={handleEditDataChange} required />
                 </div>
                 <div className="form-group">
-                  <label htmlFor="grad">Garde</label>
+                  <label htmlFor="grad">Grade</label>
                   <input type="text" className="form-control" id="grad" name="grad" value={editData.grad} onChange={handleEditDataChange} required />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="cycle">Session</label>
+                  <input type="text" className="form-control" id="cycle" name="cycle" value={editData.cycle} onChange={handleEditDataChange} required />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="num_student">Numéro étudiant</label>
+                  <input type="text" className="form-control" id="num_student" name="num_student" value={editData.num_student} onChange={handleEditDataChange} required />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="year">Année</label>
+                  <input type="text" className="form-control" id="year" name="year" value={editData.year} onChange={handleEditDataChange} required />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="levels">Niveaux</label>
+                  <input type="text" className="form-control" id="levels" name="levels" value={editData.levels} onChange={handleEditDataChange} required />
                 </div>
           </form>
         </div>

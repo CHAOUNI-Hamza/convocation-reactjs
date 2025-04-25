@@ -16,13 +16,13 @@ const TokenExpiryHandler = ({ children }) => {
           localStorage.removeItem("accessToken");
           localStorage.removeItem("tokenExpiry");
           localStorage.removeItem("role");
-          navigate("/login");
+          //navigate("/login");
         }
       } else {
         localStorage.removeItem("accessToken");
         localStorage.removeItem("tokenExpiry");
         localStorage.removeItem("role");
-        navigate("/login");
+        //navigate("/login");
       }
     };
 

@@ -2,7 +2,7 @@ import React, { useEffect } from "react";
 import axios from "axios";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import LoginView from "./views/front/LoginView";
-//import HomeView from "./views/front/HomeView";
+import StudentReservationView from "./views/front/StudentReservationView";
 import "./App.css";
 import TokenExpiryHandler from "./TokenExpiryHandler"; 
 import DashboardWiew from "./views/back/DashboardWiew";
@@ -48,18 +48,19 @@ export default function App() {
       <BrowserRouter>
         <TokenExpiryHandler>
           <Routes>
+          <Route path="/etudiant" element={<StudentReservationView />} />
             ()
             {/*<Route path="/" element={<HomeView />} />*/}
             <Route path="/login" element={<LoginView />} />
-            <Route element={<PrivateRouteAdmin />}>
-              <Route
-                path="/admin"
-                element={<DashboardWiew handleLogout={handleLogout} />}
-              />
-            </Route>
+            <Route element={<PrivateRouteAdmin />}><Route path="/admin" element={<DashboardWiew handleLogout={handleLogout} />}/></Route>
+            
           </Routes>
+          
         </TokenExpiryHandler>
+        
       </BrowserRouter>
+      
     </UserProvider>
+    
   );
 }
