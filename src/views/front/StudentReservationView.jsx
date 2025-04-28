@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import Swal from 'sweetalert2';
+import coverHeader from '../../assets/cover-stu.jpg';
 
 const StudentReservation = () => {
   const [apogee, setApogee] = useState('');
@@ -46,45 +48,65 @@ const StudentReservation = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
 
+    console.log('Apogee:', apogee);
+    console.log('Selected Timeslots:', selectedTimeslots);
+
     axios.post('/reservations', {
       apogee,
       timeslots: selectedTimeslots
     }).then(() => {
-      setMessage('Reservation successful!');
+      Swal.fire({
+              icon: 'success',
+              title: 'جيد',
+              text: 'تم الحجز بنجاح',
+            });
       setSelectedTimeslots([]);
-    }).catch(() => {
-      setMessage('Error saving reservation.');
+    }).catch((error) => {
+      if (error.response && error.response.data && error.response.data.message) {
+        Swal.fire({
+                icon: 'error',
+                title: 'خطأ',
+                text: error.response.data.message,
+              });
+      } else {
+        Swal.fire({
+                icon: 'error',
+                title: 'خطأ',
+                text: "خطأ أثناء تسجيل الحجز",
+              });
+      }
     });
   };
 
   return (
-    <div className="student-reservation" style={{ maxWidth: '500px', margin: 'auto' }}>
-      <h2>Student Reservation</h2>
+    <div className="student-reservation mt-5 container text-center">
+      <img src={coverHeader} alt="" width="100%" />
+      <h3 className='font-arabic mt-5'>الرجاء إدخال رقم أبو جي الخاص بك</h3>
 
-      <div style={{ marginBottom: '1rem' }}>
-        <input
-          type="text"
-          placeholder="Enter APOGEE number"
-          value={apogee}
-          onChange={handleApogeeChange}
-        />
-        <button onClick={fetchStudent}>Search</button>
-      </div>
+      <div className="mb-3">
+  <input
+    type="text"
+    className="form-control mt-4"
+    style={{direction: 'rtl'}}
+    placeholder="الرجاء إدخال رقم أبو جي الخاص بك"
+    value={apogee}
+    onChange={handleApogeeChange}
+  />
+</div>
+<div>
+  <button onClick={fetchStudent} className="btn btn-primary font-arabic">البحث</button>
+</div>
 
-      {student && (
-        <div style={{ marginBottom: '1rem' }}>
-          <p><strong>First Name:</strong> {student.first_name}</p>
-          <p><strong>Arabic Last Name:</strong> {student.last_name_ar}</p>
-        </div>
-      )}
-
-      {student && timeslots.length > 0 && (
+<div className='row mt-5'>
+<div className='col-md-6' style={{ direction: 'rtl' }}>
+  {student && timeslots.length > 0 && (
         <form onSubmit={handleSubmit}>
-          <h3>Select Timeslots:</h3>
+          <h3 className='font-arabic'> حدد الفترات الزمنية</h3>
           {timeslots.map(slot => (
             <div key={slot.id}>
-              <label>
+              <label style={{ fontFamily: 'Cairo' }}>
                 <input
+                style={{ marginLeft: '10px' }}
                   type="checkbox"
                   value={slot.id}
                   checked={selectedTimeslots.includes(slot.id)}
@@ -95,9 +117,27 @@ const StudentReservation = () => {
             </div>
           ))}
 
-          <button type="submit" style={{ marginTop: '1rem' }}>Submit Reservation</button>
+          <button className="btn btn-primary font-arabic" type="submit" style={{ marginTop: '1rem' }}>إرسال الحجز</button>
         </form>
       )}
+  </div>
+  <div className='col-md-6'>
+  {student && (
+        <div className='font-arabic' style={{ marginBottom: '1rem', direction: 'rtl', textAlign: 'right' }}>
+          <p><strong>الأبوجي :</strong> {student.apogee}</p>
+          <p><strong>رقم الطالب :</strong> {student.cne}</p>
+          <p><strong>الإسم :</strong> {student.first_name_ar}</p>
+          <p><strong>النسب :</strong> {student.last_name_ar}</p>
+          <p><strong>رقم البطاقة الوطنية :</strong> {student.cnie}</p>
+          <p><strong>المختبر :</strong> {student.lab}</p>
+        </div>
+      )}
+  </div>
+  
+</div>
+      
+
+      
 
       {message && (
         <p style={{ color: message.includes('success') ? 'green' : 'red', marginTop: '1rem' }}>
