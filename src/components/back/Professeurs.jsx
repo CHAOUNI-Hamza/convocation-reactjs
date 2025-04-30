@@ -107,8 +107,8 @@ function Professeurs() {
     const { name, value } = e.target;
     setEditData((editData) => ({ ...editData, [name]: value }));
   };
-  const validateForm = ({ sum_number, name, first_name, name_ar, first_name_ar, email, city, status, limit, grad, cycle, num_student, year, levels }) => {
-    if (!sum_number || !name || !first_name || !name_ar || !first_name_ar || !email || !city || !status || !limit || !grad || !cycle || !num_student || !year || !levels) {
+  const validateForm = ({ sum_number, name, first_name, name_ar, first_name_ar, email, city, status, limit, grad }) => {
+    if (!sum_number || !name || !first_name || !name_ar || !first_name_ar || !email || !city || !status || !limit || !grad) {
       Swal.fire({
         icon: 'error',
         title: 'Erreur',
@@ -218,16 +218,20 @@ function Professeurs() {
   };
   const convertToExcel = (data) => {
   const ws = XLSX.utils.json_to_sheet(data.map(professeur => ({
-    'sum_number': professeur.sum_number,
-    'name': professeur.name,
-    'first_name': professeur.first_name,
-    'name_ar': professeur.name_ar,
-    'first_name_ar': professeur.first_name_ar,
-    'email': professeur.email,
-    'ville': professeur.city,
-    'status': professeur.status,
-    'limite': professeur.limit,
-    'grad': professeur.grad,
+    'Som': professeur.sum_number,
+    'Nom': professeur.name,
+    'Prénom': professeur.first_name,
+    'Nom Ar': professeur.name_ar,
+    'Prénom Ar': professeur.first_name_ar,
+    'Email': professeur.email,
+    'Ville': professeur.city,
+    'Status': professeur.status,
+    'Limite': professeur.limit,
+    'Grade': professeur.grad,
+    'Session': professeur.cycle,
+    'Numéro étudiant': professeur.num_student,
+    'Année': professeur.year,
+    'Niveaux': professeur.levels,
   })));
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Professeurs');
@@ -387,7 +391,7 @@ function Professeurs() {
               <form>
                 <div className="form-group">
                   <label htmlFor="sum_number">Som</label>
-                  <input type="text" className="form-control" id="sum_number" name="sum_number" value={newData.sum_number} onChange={handleNewDataChange} required />
+                  <input type="text" placeholder='في حال كان طالبًا، أدخل رقم البطاقة الوطنية' className="form-control" id="sum_number" name="sum_number" value={newData.sum_number} onChange={handleNewDataChange} required />
                 </div>
                 <div className="form-group">
                   <label htmlFor="name">Nom</label>
@@ -431,19 +435,19 @@ function Professeurs() {
                 </div>
                 <div className="form-group">
                   <label htmlFor="cycle">Session</label>
-                  <input type="text" className="form-control" id="cycle" name="cycle" value={newData.cycle} onChange={handleNewDataChange} required />
+                  <input type="text" placeholder='الربيعية - الخريفية' className="form-control" id="cycle" name="cycle" value={newData.cycle} onChange={handleNewDataChange} required />
                 </div>
                 <div className="form-group">
                   <label htmlFor="num_student">Numéro étudiant</label>
-                  <input type="text" className="form-control" id="num_student" name="num_student" value={newData.num_student} onChange={handleNewDataChange} required />
+                  <input type="text" placeholder='رقم الطالب' className="form-control" id="num_student" name="num_student" value={newData.num_student} onChange={handleNewDataChange} required />
                 </div>
                 <div className="form-group">
                   <label htmlFor="year">Année</label>
-                  <input type="text" className="form-control" id="year" name="year" value={newData.year} onChange={handleNewDataChange} required />
+                  <input type="text" placeholder='السنة الدراسية 0000/0000' className="form-control" id="year" name="year" value={newData.year} onChange={handleNewDataChange} required />
                 </div>
                 <div className="form-group">
                   <label htmlFor="levels">Niveaux</label>
-                  <input type="text" className="form-control" id="levels" name="levels" value={newData.levels} onChange={handleNewDataChange} required />
+                  <input type="text" placeholder='المستوى الدراسي ( ماستر - الدكتورة ... )' className="form-control" id="levels" name="levels" value={newData.levels} onChange={handleNewDataChange} required />
                 </div>
               </form>
             </div>
@@ -469,7 +473,7 @@ function Professeurs() {
           <form>
           <div className="form-group">
                   <label htmlFor="sum_number">Som</label>
-                  <input type="text" className="form-control" id="sum_number" name="sum_number" value={editData.sum_number} onChange={handleEditDataChange} required />
+                  <input type="text" placeholder='في حال كان طالبًا، أدخل رقم البطاقة الوطنية' className="form-control" id="sum_number" name="sum_number" value={editData.sum_number} onChange={handleEditDataChange} required />
                 </div>
                 <div className="form-group">
                   <label htmlFor="name">Nom</label>
@@ -513,19 +517,19 @@ function Professeurs() {
                 </div>
                 <div className="form-group">
                   <label htmlFor="cycle">Session</label>
-                  <input type="text" className="form-control" id="cycle" name="cycle" value={editData.cycle} onChange={handleEditDataChange} required />
+                  <input type="text" placeholder='الربيعية - الخريفية' className="form-control" id="cycle" name="cycle" value={editData.cycle} onChange={handleEditDataChange} required />
                 </div>
                 <div className="form-group">
                   <label htmlFor="num_student">Numéro étudiant</label>
-                  <input type="text" className="form-control" id="num_student" name="num_student" value={editData.num_student} onChange={handleEditDataChange} required />
+                  <input type="text" placeholder='رقم الطالب' className="form-control" id="num_student" name="num_student" value={editData.num_student} onChange={handleEditDataChange} required />
                 </div>
                 <div className="form-group">
                   <label htmlFor="year">Année</label>
-                  <input type="text" className="form-control" id="year" name="year" value={editData.year} onChange={handleEditDataChange} required />
+                  <input type="text" placeholder='السنة الدراسية 0000/0000' className="form-control" id="year" name="year" value={editData.year} onChange={handleEditDataChange} required />
                 </div>
                 <div className="form-group">
                   <label htmlFor="levels">Niveaux</label>
-                  <input type="text" className="form-control" id="levels" name="levels" value={editData.levels} onChange={handleEditDataChange} required />
+                  <input type="text" placeholder='المستوى الدراسي ( ماستر - الدكتورة ... )' className="form-control" id="levels" name="levels" value={editData.levels} onChange={handleEditDataChange} required />
                 </div>
           </form>
         </div>

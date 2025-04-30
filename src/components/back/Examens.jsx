@@ -167,6 +167,7 @@ function Examens() {
             teacher_ids: [],
           });        
           fetchData();
+          fetchTeachers();
         });
       } catch (error) {
         handleApiError(error, "Une erreur s'est produite lors de l'ajout.");

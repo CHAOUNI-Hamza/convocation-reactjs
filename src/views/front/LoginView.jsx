@@ -119,7 +119,7 @@ export default function HomeView() {
                   <div className="form-group d-md-flex">
                     <div className="text-left">
                       <label className="checkbox-primary mb-0 fw-bold">
-                      Plateforme CONVOCATION - FLSHM Mohammedia
+                      Planning professeures - FLSHM Mohammedia
                       </label>
                     </div>
                   </div>

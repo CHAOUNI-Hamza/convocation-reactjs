@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import axios from 'axios';
+import '../../css/global.css';
 import Swal from 'sweetalert2';
 import coverHeader from '../../assets/cover-stu.jpg';
-
-import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 
 const StudentReservation = () => {
   const [apogee, setApogee] = useState('');
@@ -14,6 +13,12 @@ const StudentReservation = () => {
   const [selectedTimeslots, setSelectedTimeslots] = useState([]);
   const [message, setMessage] = useState('');
   const [reservations, setReservations] = useState([]);
+
+  const printRef = useRef();
+
+  const handlePrint = () => {
+    window.print();
+  };
 
 
 
@@ -95,70 +100,6 @@ const StudentReservation = () => {
       }
     });
   };
-
-  const generatePDF = async () => {
-    console.log("Réservations reçues :", reservations);
-    console.log("Informations étudiant reçues :", studentres);
-  
-    // 1. Charger le modèle PDF
-    const existingPdfBytes = await fetch('/reservation.pdf').then(res => res.arrayBuffer());
-  
-    // 2. Charger le PDF existant
-    const pdfDoc = await PDFDocument.load(existingPdfBytes);
-  
-    // 3. Embedding font
-    const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-  
-    // 4. Sélection de la première page
-    const pages = pdfDoc.getPages();
-    const firstPage = pages[0];
-    let { height } = firstPage.getSize();
-  
-    // 5. Ajouter chaque champ séparément (sans label)
-    firstPage.drawText(studentres.first_name, { x: 230, y: 761, size: 12, font, color: rgb(0, 0, 0) });
-    firstPage.drawText(studentres.last_name, { x: 100, y: height - 140, size: 12, font, color: rgb(0, 0, 0) });
-    firstPage.drawText(studentres.apogee, { x: 100, y: height - 160, size: 12, font, color: rgb(0, 0, 0) });
-    firstPage.drawText(studentres.cne, { x: 100, y: height - 180, size: 12, font, color: rgb(0, 0, 0) });
-    firstPage.drawText(studentres.cnie, { x: 100, y: height - 200, size: 12, font, color: rgb(0, 0, 0) });
-    firstPage.drawText(studentres.lab, { x: 100, y: height - 240, size: 12, font, color: rgb(0, 0, 0) });
-
-  
-    // 6. Ajouter les réservations
-    let y = height - 280; // Reprendre plus bas après les infos étudiant
-    reservations.forEach((res, index) => {
-      const date = res.timeslot.date;
-      const time = res.timeslot.time_range;
-  
-      firstPage.drawText(`${index + 1}. ${date}`, {
-        x: 50,
-        y,
-        size: 12,
-        font,
-        color: rgb(0, 0, 0),
-      });
-  
-      firstPage.drawText(`${time}`, {
-        x: 200,
-        y,
-        size: 12,
-        font,
-        color: rgb(0, 0, 0),
-      });
-  
-      y -= 20;
-    });
-  
-    // 7. Sauvegarde et téléchargement
-    const pdfBytes = await pdfDoc.save();
-    const blob = new Blob([pdfBytes], { type: 'application/pdf' });
-    const url = URL.createObjectURL(blob);
-  
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'reservations.pdf';
-    a.click();
-    URL.revokeObjectURL(url);
-  };
   
   
   
@@ -183,74 +124,106 @@ const StudentReservation = () => {
   <button onClick={fetchStudent} className="btn btn-primary font-arabic">البحث</button>
 </div>
 
-<div className='row  justify-content-around mt-5'>
-<div className='col-md-6' style={{ direction: 'rtl', boxShadow: '0 10px 16px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19)',
-    padding: '37px' }}>
-  {student && timeslots.length > 0 && (
-        <form onSubmit={handleSubmit}>
-          <h3 className='font-arabic'> حدد الفترات الزمنية</h3>
-          <div className='row mt-4'>
-            
-                                {timeslots.map(slot => (
-                                  <div className='col-md-4'>
-                                <div key={slot.id}>
-                                <label style={{ fontFamily: 'Cairo' }}>
-                                  <input
-                                  style={{ marginLeft: '10px' }}
-                                    type="checkbox"
-                                    value={slot.id}
-                                    checked={selectedTimeslots.includes(slot.id)}
-                                    onChange={() => handleTimeslotChange(slot.id)}
-                                  />
-                                  {slot.date} – {slot.time_range}
-                                </label>
-                              </div>
-                              </div>
-                              ))}
-            
-          </div>
-          
-
-          <button className="btn btn-primary font-arabic" type="submit" style={{ marginTop: '1rem' }}>إرسال الحجز</button>
-        </form>
-      )}
-  </div>
+{student && timeslots.length > 0 && (
+  <div className='row  justify-content-around mt-5'>
   <div className='col-md-4' style={{ boxShadow: '0 10px 16px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19)',
-    padding: '37px' }}>
-  {student && (
-        <div className='font-arabic' style={{ marginBottom: '1rem', direction: 'rtl', textAlign: 'right' }}>
-          <p><strong>الأبوجي :</strong> {student.apogee}</p>
-          <p><strong>رقم الطالب :</strong> {student.cne}</p>
-          <p><strong>الإسم :</strong> {student.first_name_ar}</p>
-          <p><strong>النسب :</strong> {student.last_name_ar}</p>
-          <p><strong>رقم البطاقة الوطنية :</strong> {student.cnie}</p>
-          <p><strong>المختبر :</strong> {student.lab}</p>
-        </div>
-      )}
-  </div>
-</div>
-{reservations.length > 0 && (
-  <div className="font-arabic mt-4" style={{ textAlign: 'right', direction: 'rtl' }}>
-    <h4>الحجوزات السابقة</h4>
-    <ul>
-      {reservations.map(r => (
-        <li key={r.id}>
-          {r.timeslot?.date} - {r.timeslot?.time_range}
-        </li>
-      ))}
-    </ul>
-    <button onClick={generatePDF}>Télécharger PDF</button>
+      padding: '37px' }}>
+    {student && (
+          <div className='font-arabic' style={{ marginBottom: '1rem', textAlign: 'left' }}>
+            <p><strong>Nom :</strong> {student.last_name}</p>
+            <p><strong>Prénom :</strong> {student.first_name}</p>
+            <p><strong>N° apogée : </strong> {student.apogee}</p>
+            <p><strong>CNE :</strong> {student.cne}</p>
+            <p><strong>CNI :</strong> {student.cnie}</p>
+            <p><strong>Labo :</strong> {student.lab}</p>
+          </div>
+        )}
+    </div>
+  <div className='col-md-6' style={{ direction: 'rtl', boxShadow: '0 10px 16px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19)',
+      padding: '37px' }}>
+    {student && timeslots.length > 0 && (
+          <form onSubmit={handleSubmit}>
+            <h3 className='font-arabic'> حدد الفترات الزمنية</h3>
+            <div className='row mt-4'>
+              
+                                  {timeslots.map(slot => (
+                                    <div className='col-md-4'>
+                                  <div key={slot.id}>
+                                  <label style={{ fontFamily: 'Cairo' }}>
+                                    <input
+                                    style={{ marginLeft: '10px' }}
+                                      type="checkbox"
+                                      value={slot.id}
+                                      checked={selectedTimeslots.includes(slot.id)}
+                                      onChange={() => handleTimeslotChange(slot.id)}
+                                    />
+                                    {slot.date} – {slot.time_range}
+                                  </label>
+                                </div>
+                                </div>
+                                ))}
+              
+            </div>
+            
+  
+            <button className="btn btn-primary font-arabic" type="submit" style={{ marginTop: '1rem' }}>إرسال الحجز</button>
+          </form>
+        )}
+    </div>
+    
   </div>
 )}
 
-{studentres && (
-  <div>
-    <h5>Informations de l’étudiant</h5>
-    <p>Nom : {studentres.first_name}</p>
-    <p>Prénom : {studentres.last_name}</p>
-    <p>Apogée : {studentres.apogee}</p>
-  </div>
+
+{(studentres || (reservations && reservations.length > 0)) && (
+  <>
+    <button className="btn btn-primary mb-3 mt-5" onClick={handlePrint}>
+      Imprimer
+    </button>
+
+    <div className='print mt-5' ref={printRef}>
+      <div className='info mt-5 mb-2'>
+        {studentres && (
+          <div className='row'>
+            <div className='col-md-3'><span className="fw-bold">Nom :</span> {studentres.last_name}</div>
+            <div className='col-md-3'><span className="fw-bold">Prénom :</span> {studentres.first_name}</div>
+            <div className='col-md-3'><span className="fw-bold">Apogée :</span> {studentres.apogee}</div>
+            <div className='col-md-3'><span className="fw-bold">CNI :</span> {studentres.cnie}</div>
+          </div>
+        )}
+      </div>
+
+      <table className="table">
+        <thead>
+          <tr>
+            <th style={{ width: "5%" }} scope="col"></th>
+            <th style={{ width: "20%" }} scope="col">Date</th>
+            <th style={{ width: "25%" }} scope="col">Créneau horaire</th>
+            <th style={{ width: "50%" }} scope="col"></th>
+          </tr>
+        </thead>
+
+        {reservations && reservations.length > 0 && (
+          <tbody>
+            {reservations.map((r, index) => (
+              <tr key={index}>
+                <th style={{ width: "5%" }} scope="row">{index + 1}</th>
+                <td style={{ width: "20%" }}>{r.timeslot?.date}</td>
+                <td style={{ width: "25%" }}>{r.timeslot?.time_range}</td>
+                <td style={{ width: "50%" }}></td>
+              </tr>
+            ))}
+          </tbody>
+        )}
+      </table>
+      <div className='text-red mb-5'>الطالب مدعو للحراسة في امتحانات الدورة العادية الربيعية بالكلية، وليس له الحق في اختيار الأستاذ (ة) أو القاعة</div>
+    </div>
+  </>
 )}
+
+
+
+
 
 
 
