@@ -10,8 +10,8 @@ import DashboardWiew from "./views/back/DashboardWiew";
 import PrivateRouteAdmin from "./PrivateRouteAdmin";
 import { UserProvider } from "./UserContext";
 
-axios.defaults.baseURL = "http://localhost:8000/api";
-//axios.defaults.baseURL = 'https://events.recherche-scientifique-flshm.ma/api';
+//axios.defaults.baseURL = "http://localhost:8000/api";
+axios.defaults.baseURL = 'https://exams.recherche-scientifique-flshm.ma/api';
 axios.defaults.headers.common["Content-Type"] = "application/json";
 
 axios.interceptors.response.use(

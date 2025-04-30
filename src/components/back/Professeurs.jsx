@@ -99,6 +99,18 @@ function Professeurs() {
       setError("Une erreur s'est produite lors du chargement des données.");
     }
   };
+
+  const fetchAllDataForExcelRes = async () => {
+    try {
+      // Ici vous faites une requête pour récupérer toutes les données sans pagination
+      const response = await axios.get('/reservation');
+      //console.log(response.data.data)
+      return response.data.data; // Retourne toutes les données sans pagination
+    } catch (error) {
+      console.error("Error fetching all data:", error);
+      setError("Une erreur s'est produite lors du chargement des données.");
+    }
+  };
   const handleNewDataChange = (e) => {
     const { name, value } = e.target;
     setNewData((newData) => ({ ...newData, [name]: value }));
@@ -237,14 +249,35 @@ function Professeurs() {
     XLSX.utils.book_append_sheet(wb, ws, 'Professeurs');
     return wb;
   };
+  const convertToExcelRes = (data) => {
+    const ws = XLSX.utils.json_to_sheet(data.map(reservation => ({
+      'Apogee': reservation.apogee,
+      'CNE': reservation.cne,
+      'Prénom': reservation.first_name,
+      'Nom': reservation.last_name,
+      'Labo': reservation.lab,
+      'CNIE': reservation.cnie,
+      'date': reservation.date,
+      'creneau_horaire': reservation.time_range,
+    })));
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'reservation');
+      return wb;
+    };
   const downloadExcel = async () => {
     const allData = await fetchAllDataForExcel();  // Récupérer toutes les données pour l'export
     const wb = convertToExcel(allData);  // Convertir ces données en Excel
     XLSX.writeFile(wb, 'professeurs.xlsx');  // Télécharger le fichier Excel
   };
+  const downloadExcelRes = async () => {
+    const allData = await fetchAllDataForExcelRes();  // Récupérer toutes les données pour l'export
+    const wb = convertToExcelRes(allData);  // Convertir ces données en Excel
+    XLSX.writeFile(wb, 'reservations.xlsx');  // Télécharger le fichier Excel
+  };
   useEffect(() => {
     fetchData();
     fetchAllDataForExcel();
+    fetchAllDataForExcelRes();
   }, []); 
   return (
     <div className="row font-arabic">
@@ -274,6 +307,17 @@ function Professeurs() {
             <path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2M9.5 3A1.5 1.5 0 0 0 11 4.5h2V9H3V2a1 1 0 0 1 1-1h5.5zM3 12v-2h2v2zm0 1h2v2H4a1 1 0 0 1-1-1zm3 2v-2h3v2zm4 0v-2h3v1a1 1 0 0 1-1 1zm3-3h-3v-2h3zm-7 0v-2h3v2z"/>
           </svg>
           Télécharger
+          </button>
+          <button
+            type="button"
+            className="ml-2 btn btn-success"
+            onClick={downloadExcelRes}
+            aria-label="تحميل"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" style={{ marginRight: '5px' }} height="16" fill="currentColor" className="bi bi-file-earmark-spreadsheet" viewBox="0 0 16 16">
+            <path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2M9.5 3A1.5 1.5 0 0 0 11 4.5h2V9H3V2a1 1 0 0 1 1-1h5.5zM3 12v-2h2v2zm0 1h2v2H4a1 1 0 0 1-1-1zm3 2v-2h3v2zm4 0v-2h3v1a1 1 0 0 1-1 1zm3-3h-3v-2h3zm-7 0v-2h3v2z"/>
+          </svg>
+          table des réservations
           </button>
     <div className="card-tools" style={{ marginRight: '10rem' }}>
           </div>

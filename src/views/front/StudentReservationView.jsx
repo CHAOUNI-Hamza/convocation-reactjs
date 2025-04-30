@@ -3,6 +3,7 @@ import axios from 'axios';
 import '../../css/global.css';
 import Swal from 'sweetalert2';
 import coverHeader from '../../assets/cover-stu.jpg';
+import logo from '../../assets/logo.jpg';
 
 const StudentReservation = () => {
   const [apogee, setApogee] = useState('');
@@ -130,8 +131,8 @@ const StudentReservation = () => {
       padding: '37px' }}>
     {student && (
           <div className='font-arabic' style={{ marginBottom: '1rem', textAlign: 'left' }}>
-            <p><strong>Nom :</strong> {student.last_name}</p>
-            <p><strong>Prénom :</strong> {student.first_name}</p>
+            <p><strong>Nom :</strong> {student.first_name}</p>
+            <p><strong>Prénom :</strong> {student.last_name}</p>
             <p><strong>N° apogée : </strong> {student.apogee}</p>
             <p><strong>CNE :</strong> {student.cne}</p>
             <p><strong>CNI :</strong> {student.cnie}</p>
@@ -182,6 +183,7 @@ const StudentReservation = () => {
     </button>
 
     <div className='print mt-5' ref={printRef}>
+    <img src={logo} alt="" width="20%" />
       <div className='info mt-5 mb-2'>
         {studentres && (
           <div className='row'>
